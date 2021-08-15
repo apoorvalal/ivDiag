@@ -28,12 +28,10 @@ dgp_zfs = function(γ = 0, n = 1e4, share_zfs = 0.2,
 }
 # %%
 d = dgp_zfs(γ = 0.2, β_0 = 2)
-# zero first stage
+# zero first stage - nonzero
 zfs_fs = felm(D ~ Z, d[!is.na(zfs_pop)])
-zfs_fs |> summary()
 # reduced form
 zfs_rf = felm(Y ~ Z, d[!is.na(zfs_pop)])
-zfs_rf |> summary()
 # %%
 tsls = felm(Y ~ 1 | 0 | (D ~ Z), d)
 # %%

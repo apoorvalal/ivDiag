@@ -2,8 +2,14 @@
 
 R package for IV diagnostics accompanying Lal, Lockhart, Xu, and Zu (2021). Computes bootstrap SEs, F-stats, effective F stats, and Local-to-zero IV estimates. 
 
+## Installation
 
-## Bootstrap
+```r
+library(remotes)
+install_github("apoorvalal/ivDiag")
+```
+
+### Bootstrap
 
 ```r
 n = 1e3
@@ -33,7 +39,10 @@ $N_cl
 NULL
 ```
 
-## Zero-first stage test (CHR 'Plausibly Exogenous' test)
+### Zero-first stage test 
+
+CHR 2012 'Plausibly Exogenous' estimates with prior derived from known
+`zero-first-stage` subsample.
 
 ```r
 dgp_zfs = function(γ = 0, n = 1e4, share_zfs = 0.2,
