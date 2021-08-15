@@ -1,4 +1,4 @@
-# ivDiag (in progress)
+# ivDiag
 
 R package for IV diagnostics accompanying Lal, Lockhart, Xu, and Zu (2021). Computes bootstrap SEs, F-stats, effective F stats, and Local-to-zero IV estimates. 
 
