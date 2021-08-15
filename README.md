@@ -1,6 +1,6 @@
 # ivDiag
 
-R package for IV diagnostics accompanying Lal, Lockhart, Xu, and Zu (2021). Computes bootstrap SEs, F-stats, effective F stats, and Local-to-zero IV estimates. 
+R package for IV diagnostics accompanying Lal, Lockhart, Xu, and Zu (2021). Computes bootstrap SEs, F-stats, effective F stats, and Local-to-zero IV estimates.
 
 ## Installation
 
@@ -13,33 +13,34 @@ install_github("apoorvalal/ivDiag")
 
 ```r
 n = 1e3
-z = rnorm(n)
-d = rbinom(n, 1, plogis(z))
-y = 2 * d + rnorm(n)
+z = rnorm(n); ε = rnorm(n)
+d = rbinom(n, 1, plogis(z + ε))
+y = 2 * d + ε
 df = data.frame(y, d, z)
+# biased
+lm(y ~ d)
 # %% bootstrap
 boot_IV(df, 'y', 'd', 'z', nboots = 100)
+
 ```
 
 ```
 Bootstrapping:
-Parallelising 100 reps on 7 cores 
-Bootstrap took 8.245 sec.
+Parallelising 100 reps on 7 cores
+Bootstrap took 7.079 sec.
+
 $est_ols
-Coef1.9645SE.t0.0646SE.b0.0706CI.b 2.5%1.834CI.b 97.5%2.107
+Coef                2.6846  SE.t0.0571  SE.b0.0525  CI.b 2.5%2.583  CI.b 97.5%2.775
 $est_2sls
-Coef2.2018SE.t0.152SE.b0.1544CI.b 2.5%1.876CI.b 97.5%2.441
+Coef                2.016   SE.t0.1533  SE.b0.1561  CI.b 2.5%1.67   CI.b 97.5%2.298
 $F_stat
-F.standard223.9963F.robust329.0763F.cluster<NA>F.boot311.826
-$p_iv
-1
-$N
-1000
-$N_cl
-NULL
+F.standard    187.0336      F.robust    241.9001    F.cluster<NA>   F.boot   205.8122
+$p_iv 1
+$N 1000
+$N_cl NULL
 ```
 
-### Zero-first stage test 
+### Zero-first stage test
 
 CHR 2012 'Plausibly Exogenous' estimates with prior derived from known
 `zero-first-stage` subsample.

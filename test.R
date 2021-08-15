@@ -1,11 +1,13 @@
 library(ivDiag); library(data.table); library(lfe)
 
-# %% bootstrap iv test
+# %% dgp for bootstrap iv
 n = 1e3
-z = rnorm(n)
-d = rbinom(n, 1, plogis(z))
-y = 2 * d + rnorm(n)
+z = rnorm(n); ε = rnorm(n)
+d = rbinom(n, 1, plogis(z + ε))
+y = 2 * d + ε
 df = data.frame(y, d, z)
+# biased
+lm(y ~ d)
 # %% bootstrap
 boot_IV(df, 'y', 'd', 'z', nboots = 100)
 
