@@ -33,7 +33,21 @@ boot_IV(
 
 \item{controls}{control variables (character vector)}
 
-\item{show_progress_bar}{Show progress bar (default TRUE).}
+\item{FE}{fixed effects (character vector)}
+
+\item{cl}{clustering column for SE (character vector)}
+
+\item{weights}{weights name (string)}
+
+\item{nboots}{number of bootstrap reps (1000 by default)}
+
+\item{parallel}{boolean for parallel bootstrap (on by default)}
+
+\item{seed}{seed}
+
+\item{cores}{number of cores to parallelise across (defaults to all - 1)}
+
+\item{prec}{precision of summary (4 by default)}
 }
 \value{
 list of results

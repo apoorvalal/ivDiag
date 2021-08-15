@@ -4,8 +4,14 @@
 #' @param D treatment (string)
 #' @param Z instrument (string)
 #' @param controls control variables (character vector)
-#' @param FE
-#' @param show_progress_bar Show progress bar (default TRUE).
+#' @param FE fixed effects (character vector)
+#' @param cl clustering column for SE (character vector)
+#' @param weights weights name (string)
+#' @param nboots number of bootstrap reps (1000 by default)
+#' @param parallel boolean for parallel bootstrap (on by default)
+#' @param cores number of cores to parallelise across (defaults to all - 1)
+#' @param prec precision of summary (4 by default)
+#' @param seed seed
 #' @return list of results
 #' @importFrom lfe felm
 #' @importFrom foreach foreach `%dopar%`

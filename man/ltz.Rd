@@ -4,10 +4,14 @@
 \alias{ltz}
 \title{Estimates Local-to-Zero IV coefficients and SEs for a single instrument}
 \usage{
-ltz(df, mu, sig, ivmod)
+ltz(df, W, Z, mu, sig, ivmod)
 }
 \arguments{
 \item{df}{dataframe}
+
+\item{W}{treatment (string)}
+
+\item{Z}{instrument (string)}
 
 \item{mu}{prior point estimate of direct effect of instrument on outcome}
 
