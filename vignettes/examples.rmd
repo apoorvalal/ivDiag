@@ -1,0 +1,114 @@
+---
+title: ivDiag usage examples
+author: Apoorva Lal
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+output:
+  html_document:
+    self_contained: true
+    theme: flatly
+    highlight: tango
+    toc: true
+    toc_float: true
+    toc_depth: 3
+---
+
+<style type="text/css">
+.main-container {
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+}
+</style>
+
+```{r}
+library(knitr)
+knitr::opts_chunk$set(
+  echo =    T,          # don't show code
+  include = T,          # show output
+  warning = F,       # don't show warnings
+  message = F,       # don't show messages (less serious warnings)
+  cache   = T,       # F unless runtime is very long
+  # root.dir = 'location_of_dependencies'
+  fig.align = "center"
+)
+
+library(ivDiag)
+```
+
+
+`ivDiag` is a package for uncertainty quantification and sensitivity
+analysis for IV designs that provides `R` implementations of the
+guidelines proposed in Lal et al (2021).
+
+The package provides functions to compute (block-)bootstrapped
+standard errors, F-statistics, and weak-IV robust confidence intervals
+as well as the Local-to-Zero estimator (Conley, Hansen, and Ross
+2012). This package is a work in progress.
+
+# Uncertainty Quantification
+
+```{r}
+# %% Meredith (2013) APSR data
+df <-readRDS("../tmp/apsr_Meredith_2013.rds")
+Y <- "DemShareDB"; D <- "DemShareGOV"; Z <- "HomeGOV"
+controls <- c("HomeDB")
+cl <- "fips"
+FE <- c("fips","RaceID")
+weights <- "Weight"
+```
+
+## First Stage Testing
+
+```{r}
+# %% first stage F statistics
+fst = first_stage_tests(data=df, Y=Y, D=D, Z=Z, controls=controls, FE =FE,
+  cl=cl, weights=weights, boot = T, nboot = 100)
+fst |> print()
+```
+
+
+## Bootstrap / Block-bootstrap Standard Errors and F Statistic
+
+```{r}
+bootres=boot_IV(data=df, Y=Y, D=D, Z=Z, controls=controls, FE = FE,
+  cl=cl, weights=weights, nboot = 100)
+bootres |> print()
+```
+
+
+### Weak-IV robust Anderson-Rubin test
+
+Fork of `ivreg::AR.test` that uses `felm` to partial out and fit the
+IV regression instead of `AER` and can fit larger models.
+
+```{r}
+AR_test(df, Y, D, Z, controls, FE) |> print()
+```
+
+
+# Sensitivity Analysis
+
+## Zero-First-Stage
+
+Example from guiso sapienza & zingales 2016.
+
+```{r}
+library(lfe)
+
+source("../R/utils.R")
+load('../tmp/GSZ2016.rds')
+
+m1 = felm(
+  formula_lfe('totassoc_p',
+  X = c('altitudine', 'escursione', 'costal', 'nearsea', 'population', 'pop2', 'gini_land', 'gini_income' ),
+  W = 'libero_comune_allnord', Z = "bishopcity"),
+  data = gsz_2016, weights = gsz_2016$population) |> robustify()
+
+zfs_prior # estimate in ZFS south sample
+```
+
+
+```{r}
+ltz_est = ltz(gsz_2016_residualised, "W", "Z", mu = zfs_prior, sig = 0.1, ivmod = m1)
+ltz_est |> print()
+```
