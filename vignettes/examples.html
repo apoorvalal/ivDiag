@@ -1705,7 +1705,7 @@ div.tocify {
 ## [1] 2756</code></pre>
 <div id="weak-iv-robust-anderson-rubin-test" class="section level3">
 <h3>Weak-IV robust Anderson-Rubin test</h3>
-<p>Fork of <code>ivreg::AR.test</code> that uses <code>felm</code> to partial out and fit the IV regression instead of <code>AER</code> and can fit larger models.</p>
+<p>Fork of <code>ivmodel::AR.test</code> that uses <code>felm</code> to partial out and fit the IV regression instead of <code>AER</code> and can fit larger models.</p>
 <div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1"></a><span class="kw">AR_test</span>(df, Y, D, Z, controls, FE) <span class="op">|</span><span class="er">&gt;</span><span class="st"> </span><span class="kw">print</span>()</span></code></pre></div>
 <pre><code>## $Fstat
 ## [1] 9.343

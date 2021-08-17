@@ -78,7 +78,7 @@ bootres |> print()
 
 ### Weak-IV robust Anderson-Rubin test
 
-Fork of `ivreg::AR.test` that uses `felm` to partial out and fit the
+Fork of `ivmodel::AR.test` that uses `felm` to partial out and fit the
 IV regression instead of `AER` and can fit larger models.
 
 ```{r}
