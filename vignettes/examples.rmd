@@ -34,7 +34,9 @@ guidelines proposed in Lal et al (2021).
 The package provides functions to compute (block-)bootstrapped
 standard errors, F-statistics, and weak-IV robust confidence intervals
 as well as the Local-to-Zero estimator (Conley, Hansen, and Ross
-2012). This package is a work in progress.
+2012). Estimation routines in `ivDiag` always return lists that can be sliced and appended to additional rows in tables produced by `modelsummary`, `fixest::etable` and `stargazer` etc.
+
+This package is a work in progress. Github issues and/or pull requests are welcome.
 
 # Uncertainty Quantification
 
@@ -99,7 +101,7 @@ f = formula_lfe('totassoc_p',
 # vanilla clustered fit
 m1 = felm(f, data = gsz_2016, weights = gsz_2016$population) |> robustify()
 
-# bootstrap fit
+# bootstrap fit - this can also be done using `boot` with the corresponding ivreg / fixest call
 m2 = felm(f, data = gsz_2016, weights = gsz_2016$population,
   Nboot = 1000, nostats=structure(FALSE,boot=TRUE))
 iv_boots = m2$boot["`libero_comune_allnord(fit)`", ]
@@ -122,6 +124,5 @@ Here, we use `patchwork::wrap_plots` to stack them.
 
 ```{r}
 analytic_est = m1 %>% summary %>% .$coefficients %>% .[nrow(.), ] %>% .[1:2]
-
 viz_iv_dists(analytic_est, iv_boots, ltz_est) %>% wrap_plots(nrow = 3)
 ```
