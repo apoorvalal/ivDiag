@@ -21,8 +21,9 @@ output:
 </style>
 
 ```{r, include = F}
-library(knitr)
+library(knitr); library(ggplot2)
 knitr::opts_chunk$set(echo = T, include = T, warning = F, message = F, cache   = T)
+theme_set(theme_minimal())
 ```
 
 
@@ -85,8 +86,7 @@ AR_test(df, Y, D, Z, controls, FE) |> print()
 Example from guiso sapienza & zingales 2016.
 
 ```{r}
-library(magrittr); library(patchwork); library(ggfortify); library(ggplot2)
-library(lfe)
+library(ivDiag); library(magrittr); library(patchwork); library(ggfortify); library(lfe)
 
 source("../R/utils.R")
 load('../tmp/GSZ2016.rds')
@@ -102,7 +102,7 @@ m1 = felm(f, data = gsz_2016, weights = gsz_2016$population) |> robustify()
 # bootstrap fit
 m2 = felm(f, data = gsz_2016, weights = gsz_2016$population,
   Nboot = 1000, nostats=structure(FALSE,boot=TRUE))
-iv_boots = m2$boot["`libero_comune_allnord(fit)`", ] %>% data.frame(ivb = .)
+iv_boots = m2$boot["`libero_comune_allnord(fit)`", ]
 ```
 
 ### LtZ estimates
@@ -115,42 +115,13 @@ ltz_est |> print()
 
 ### Visualising analytic/bootstrap/ltz sampling distributions
 
+`viz_iv_dists` expects `(iv_estimate, bootstrap_draws, ltz_estimate)` and
+returns a list of ggplot objects with the corresponding sampling distributions.
+These can then be wrapped into a single figure using `patchwork` or `gridExtra`.
+Here, we use `patchwork::wrap_plots` to stack them.
+
 ```{r}
-theme_set(theme_minimal())
-
-lb = -1; ub = 7
 analytic_est = m1 %>% summary %>% .$coefficients %>% .[nrow(.), ] %>% .[1:2]
-# first - vanilla IV estimates
-p0 = ggdistribution(dnorm, seq(lb, ub, 0.01),
-  mean = analytic_est[1], sd = analytic_est[2], colour = 'red') +
-  xlim(c(lb, ub)) +
-  geom_vline(xintercept = analytic_est[1],
-    linetype = 'solid', size = 1.5, alpha = 0.5, colour = "red") +
-  geom_vline(xintercept = c(analytic_est[1] - 1.96 * analytic_est[2],
-            analytic_est[1] + 1.96 * analytic_est[2]),
-    linetype = 'dashed', size = 1.5, colour = "red") +
-  geom_vline(xintercept = 0, alpha = 0.5) +
-  labs(title = "Conventional 2SLS", subtitle = "Nonprofits", x = "", y = "")
-# second - bootstrap
-p1 = ggplot(iv_boots, aes(x = ivb)) + geom_density(colour = 'blue') +
-  xlim(c(lb, ub)) +
-  geom_vline(xintercept = quantile(iv_boots$ivb, c(0.025, 0.975)),
-    size = 1.5, linetype = 'dotted', colour = 'blue') +
-  geom_vline(xintercept = quantile(iv_boots$ivb, c(0.5)),
-    size = 1.5,
-    colour = 'blue') +
-  geom_vline(xintercept = 0, alpha = 0.5) +
-  labs(title = "Bootstrap", subtitle = "Nonprofits", x = "", y = "")
-# third - local-to-zero
-p2 = ggdistribution(dnorm, seq(lb, ub, 0.01),
-    mean = ltz_est$est, sd = ltz_est$se, colour = 'olivedrab4') +
-  xlim(c(lb, ub)) +
-  geom_vline(xintercept = ltz_est$est[1, 1],
-    linetype = 'dashed', size = 1.5, colour = "olivedrab4") +
-  geom_vline(xintercept = c(ltz_est$ci[1], ltz_est$ci[2]),
-    linetype = 'dotted', size = 1.5, colour = "olivedrab4") +
-  geom_vline(xintercept = 0, alpha = 0.8) +
-  labs(title = "Local-to-zero", subtitle = "Nonprofits", x = "", y = "")
 
-(p0 / p1 / p2)
+viz_iv_dists(analytic_est, iv_boots, ltz_est) %>% wrap_plots(nrow = 3)
 ```
