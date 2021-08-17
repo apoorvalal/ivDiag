@@ -1622,17 +1622,8 @@ div.tocify {
 }
 </style>
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a><span class="kw">library</span>(knitr)</span>
-<span id="cb1-2"><a href="#cb1-2"></a>knitr<span class="op">::</span>opts_chunk<span class="op">$</span><span class="kw">set</span>(</span>
-<span id="cb1-3"><a href="#cb1-3"></a>  <span class="dt">echo =</span>    T,          <span class="co"># don&#39;t show code</span></span>
-<span id="cb1-4"><a href="#cb1-4"></a>  <span class="dt">include =</span> T,          <span class="co"># show output</span></span>
-<span id="cb1-5"><a href="#cb1-5"></a>  <span class="dt">warning =</span> F,       <span class="co"># don&#39;t show warnings</span></span>
-<span id="cb1-6"><a href="#cb1-6"></a>  <span class="dt">message =</span> F,       <span class="co"># don&#39;t show messages (less serious warnings)</span></span>
-<span id="cb1-7"><a href="#cb1-7"></a>  <span class="dt">cache   =</span> T,       <span class="co"># F unless runtime is very long</span></span>
-<span id="cb1-8"><a href="#cb1-8"></a>  <span class="co"># root.dir = &#39;location_of_dependencies&#39;</span></span>
-<span id="cb1-9"><a href="#cb1-9"></a>  <span class="dt">fig.align =</span> <span class="st">&quot;center&quot;</span></span>
-<span id="cb1-10"><a href="#cb1-10"></a>)</span>
-<span id="cb1-11"><a href="#cb1-11"></a></span>
-<span id="cb1-12"><a href="#cb1-12"></a><span class="kw">library</span>(ivDiag)</span></code></pre></div>
+<span id="cb1-2"><a href="#cb1-2"></a>knitr<span class="op">::</span>opts_chunk<span class="op">$</span><span class="kw">set</span>(<span class="dt">echo =</span> T, <span class="dt">include =</span> T, <span class="dt">warning =</span> F, <span class="dt">message =</span> F, <span class="dt">cache   =</span> T)</span>
+<span id="cb1-3"><a href="#cb1-3"></a><span class="kw">library</span>(ivDiag)</span></code></pre></div>
 <p><code>ivDiag</code> is a package for uncertainty quantification and sensitivity analysis for IV designs that provides <code>R</code> implementations of the guidelines proposed in Lal et al (2021).</p>
 <p>The package provides functions to compute (block-)bootstrapped standard errors, F-statistics, and weak-IV robust confidence intervals as well as the Local-to-Zero estimator (Conley, Hansen, and Ross 2012). This package is a work in progress.</p>
 <div id="uncertainty-quantification" class="section level1">
@@ -1654,7 +1645,7 @@ div.tocify {
 <div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1"></a>fst <span class="op">|</span><span class="er">&gt;</span><span class="st"> </span><span class="kw">print</span>()</span></code></pre></div>
 <pre><code>## $F_stat
 ## F.standard   F.robust  F.cluster     F.boot       F.AR 
-##    186.036     94.924     76.056     69.425      9.343 
+##    186.036     94.924     76.056     58.542      9.343 
 ## 
 ## $p_iv
 ## [1] 1
@@ -1681,19 +1672,19 @@ div.tocify {
 <span id="cb7-2"><a href="#cb7-2"></a>  <span class="dt">cl=</span>cl, <span class="dt">weights=</span>weights, <span class="dt">nboot =</span> <span class="dv">100</span>)</span></code></pre></div>
 <pre><code>## Bootstrapping:
 ## Parallelising 100 reps on 7 cores 
-## Bootstrap took 17.098 sec.</code></pre>
+## Bootstrap took 17.162 sec.</code></pre>
 <div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1"></a>bootres <span class="op">|</span><span class="er">&gt;</span><span class="st"> </span><span class="kw">print</span>()</span></code></pre></div>
 <pre><code>## $est_ols
 ##       Coef       SE.t       SE.b  CI.b 2.5% CI.b 97.5% 
-##     0.4387     0.0079     0.0124     0.4150     0.4590 
+##     0.4387     0.0079     0.0118     0.4180     0.4620 
 ## 
 ## $est_2sls
 ##       Coef       SE.t       SE.b  CI.b 2.5% CI.b 97.5% 
-##     0.2163     0.0650     0.0926     0.0380     0.3740 
+##     0.2163     0.0650     0.0696     0.0690     0.3340 
 ## 
 ## $F_stat
 ## F.standard   F.robust  F.cluster     F.boot 
-##     186.04      94.92      76.06      75.41 
+##     186.04      94.92      76.06      76.67 
 ## 
 ## $p_iv
 ## [1] 1

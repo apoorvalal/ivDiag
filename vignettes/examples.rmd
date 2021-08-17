@@ -22,16 +22,7 @@ output:
 
 ```{r}
 library(knitr)
-knitr::opts_chunk$set(
-  echo =    T,          # don't show code
-  include = T,          # show output
-  warning = F,       # don't show warnings
-  message = F,       # don't show messages (less serious warnings)
-  cache   = T,       # F unless runtime is very long
-  # root.dir = 'location_of_dependencies'
-  fig.align = "center"
-)
-
+knitr::opts_chunk$set(echo = T, include = T, warning = F, message = F, cache   = T)
 library(ivDiag)
 ```
 

@@ -160,7 +160,7 @@ first_stage_rho = function(data, D, Z, X, FE = NULL, weights = NULL # weights is
     if (is.null(weights) == TRUE) {
       rho[i] <- cor(res.d, res.z)
     } else {
-      rho[i] <- weightedCorr(x = res.d, y = res.z, weights = data[,weights], method = "Pearson")
+      rho[i] <- wCorr::weightedCorr(x = res.d, y = res.z, weights = data[,weights], method = "Pearson")
     }
   }
   return(rho)
