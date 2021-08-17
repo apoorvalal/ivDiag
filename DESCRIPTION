@@ -28,4 +28,5 @@ Imports:
     lfe,
     fixest,
     ggplot2,
-    wCorr
+    wCorr,
+    ggfortify
