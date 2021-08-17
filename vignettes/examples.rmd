@@ -20,10 +20,9 @@ output:
 }
 </style>
 
-```{r}
+```{r, include = F}
 library(knitr)
 knitr::opts_chunk$set(echo = T, include = T, warning = F, message = F, cache   = T)
-library(ivDiag)
 ```
 
 
@@ -39,6 +38,7 @@ as well as the Local-to-Zero estimator (Conley, Hansen, and Ross
 # Uncertainty Quantification
 
 ```{r}
+library(ivDiag); library(ggplot2)
 # %% Meredith (2013) APSR data
 df <-readRDS("../tmp/apsr_Meredith_2013.rds")
 Y <- "DemShareDB"; D <- "DemShareGOV"; Z <- "HomeGOV"
@@ -47,6 +47,7 @@ cl <- "fips"
 FE <- c("fips","RaceID")
 weights <- "Weight"
 ```
+
 
 ## First Stage Testing
 

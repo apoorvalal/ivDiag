@@ -22,7 +22,3 @@ formula_lfe(Y, X, W = NULL, D = NULL, Z = NULL, C = NULL)
 \description{
 Stitches together formula for use in felm
 }
-\examples{
-formula_lfe(Y='mpg', X = c('hp', 'drat'), D = c('wt', 'vs'))
-formula_lfe(Y='mpg', X = c('hp', 'drat'), W = 'gear', Z = c('cyl', 'carb'), D = c('wt', 'vs'), C = c('cyl', 'wt'))
-}

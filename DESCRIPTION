@@ -26,4 +26,6 @@ Imports:
     doParallel,
     future,
     lfe,
+    fixest,
+    ggplot2,
     wCorr

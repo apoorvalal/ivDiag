@@ -5,11 +5,6 @@
 #' @param D vector of factor variables to be partialed out
 #' @param Z vector of instruments
 #' @param C vector of variables cluster standard errors (multi-way permitted by LFE)
-#' @export
-#' @examples
-#' formula_lfe(Y='mpg', X = c('hp', 'drat'), D = c('wt', 'vs'))
-#' formula_lfe(Y='mpg', X = c('hp', 'drat'), W = 'gear', Z = c('cyl', 'carb'), D = c('wt', 'vs'), C = c('cyl', 'wt'))
-
 formula_lfe = function (Y, X, W = NULL, D = NULL, Z = NULL, C = NULL) {
   # 'second stage' step
   if (!is.null(W) & is.null(Z)) { # separate treatment dummy only
@@ -44,6 +39,35 @@ formula_lfe = function (Y, X, W = NULL, D = NULL, Z = NULL, C = NULL) {
   # return formula
   as.formula(paste(c(felm_ss, facs, felm_fs, clusts), collapse = "|"))
 }
+
+# %%
+#' Stitches together formula for use in fixest
+#' @param y The dependent variable
+#' @param X vector of controls
+#' @param W treatment variable
+#' @param D vector of factor variables to be partialed out
+#' @param Z vector of instruments
+formula_fixest = function (y, X, W = NULL, D = NULL, Z = NULL){
+    if (!is.null(W) & is.null(Z)) {
+        fixest_ss = paste(c(y, paste(c(W, X), collapse = "+")),
+            collapse = "~")
+    }
+    else {
+        fixest_ss = paste(c(y, paste(X, collapse = "+")), collapse = "~")
+    }
+    if (!is.null(D))
+        facs = paste(D, collapse = "+")
+    else facs = "0"
+    if (!is.null(Z)) {
+        fixest_fs = paste(c(paste(c(W, paste(Z, collapse = "+")),
+            collapse = "~")), collapse = "")
+        as.formula(paste(c(fixest_ss, facs, fixest_fs), collapse = "|"))
+    }
+    else {
+        as.formula(paste(c(fixest_ss, facs), collapse = "|"))
+    }
+}
+
 
 # %% partialer
 #' partial out controls and covariates from y

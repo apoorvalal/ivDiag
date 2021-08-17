@@ -16,17 +16,36 @@
 #' @importFrom lfe felm
 #' @importFrom foreach foreach `%dopar%`
 #' @importFrom glue glue
+#' @importFrom fixest feols
+#' @importFrom ggplot2 ggplot
 #' @export
 first_stage_tests <- function(data, Y, D, Z, controls = NULL, FE = NULL, cl = NULL,
     weights = NULL, boot = TRUE, nboots = 1000, parallel = TRUE, seed = 94305, cores = NULL,
     prec = 4) {
-    ##############################
+    ############################################################
     # data prep
-    ##############################
+    ############################################################
     # drop missingness
     data <- data[, c(Y, D, Z, controls, FE, cl, weights)]
     d0 <- data[complete.cases(data), ]
     n <- nrow(d0); p_iv <- length(Z)
+    ############################################################
+    # scatterplot
+    ############################################################
+    # predict Dhat using first stage
+    if(!is.null(weights)){
+      dmod = fixest::feols(formula_fixest(D, X = controls, W = Z, D = FE),
+        data = df, weights = df[, weights])
+    } else{
+      dmod = fixest::feols(formula_fixest(D, X = controls, W = Z, D = FE),
+        data = df)
+    }
+    dhat = predict(dmod)
+    dtilde = partialer(D, c(Z, controls), FE = FE, weights = weights, data = df)
+    scatter = ggplot(data.frame(dtilde, dhat), aes(dtilde, dhat)) +
+            geom_point() + geom_smooth() +
+            labs(x = "Treatment (residualised)", y = "Predicted Treatment")
+    ############################################################
     # fit first stage and store
     out0 <- first_stage_coefs(data = d0, D = D, Z = Z, X = controls, FE = FE, weights = weights)
     rho  <- first_stage_rho(  data = d0, D = D, Z = Z, X = controls, FE = FE, weights = weights)
@@ -40,8 +59,6 @@ first_stage_tests <- function(data, Y, D, Z, controls = NULL, FE = NULL, cl = NU
     } else {
         ncl <- NULL
     }
-    # AR interval and stats
-
     # bootstrap call for first stage coefs
     if (boot){
       cat("Bootstrapping:\n")
@@ -130,7 +147,9 @@ first_stage_tests <- function(data, Y, D, Z, controls = NULL, FE = NULL, cl = NU
         rho_DZ = round(rho, prec),
         # AR Results
         AR.ci_inf = AR_res$ci.info,
-        AR.ci = AR_res$ci
+        AR.ci = AR_res$ci,
+        # scatterplot
+        scatterplot = scatter
       )
     return(output)
 }
