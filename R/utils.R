@@ -5,6 +5,7 @@
 #' @param D vector of factor variables to be partialed out
 #' @param Z vector of instruments
 #' @param C vector of variables cluster standard errors (multi-way permitted by LFE)
+#' @export
 formula_lfe = function (Y, X, W = NULL, D = NULL, Z = NULL, C = NULL) {
   # 'second stage' step
   if (!is.null(W) & is.null(Z)) { # separate treatment dummy only
@@ -75,7 +76,7 @@ formula_fixest = function (y, X, W = NULL, D = NULL, Z = NULL){
 #' @param X vector of controls
 #' @param FEs fixed effects
 #' @param data Dataframe
-#' @param wegihts name of the weighting variable
+#' @param weights name of the weighting variable
 partialer = function(Y, X, FE = NULL, data, weights = NULL){
   # regress variable on controls and FEs and return residuals
   f = formula_lfe(Y = Y, X = X, D = FE)

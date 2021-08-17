@@ -11,11 +11,11 @@ partialer(Y, X, FE = NULL, data, weights = NULL)
 
 \item{data}{Dataframe}
 
+\item{weights}{name of the weighting variable}
+
 \item{y}{The dependent variable}
 
 \item{FEs}{fixed effects}
-
-\item{wegihts}{name of the weighting variable}
 }
 \description{
 partial out controls and covariates from y
