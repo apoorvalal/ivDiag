@@ -2,14 +2,8 @@ Package: ivDiag
 Title: Diagnostic tools for Instrumental Variables designs
 Version: 0.0.0.9000
 Authors@R:
-    person(given = "Apoorva",
-           family = "Lal",
-           role = c("aut", "cre"),
+    person(given = "Apoorva", family = "Lal", role = c("aut", "cre"),
            email = "lal.apoorva@gmail.com")
-    person(given = "Xu",
-           family = "Yiqing",
-           role = c("aut", "cre"),
-           email = "yiqingxu@stanford.edu")
 Description: Diagnostic tools for IV designs including bootstrap and
     block-bootstrapped standard errors, F-statistics, and Conley, Hansen,
     and Rossi (2012) Local-to-zero tests.
