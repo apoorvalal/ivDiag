@@ -9,15 +9,14 @@ library(remotes)
 install_github("apoorvalal/ivDiag")
 ```
 
-## Examples
-
-[Vignette](https://htmlpreview.github.io/?https://github.com/apoorvalal/ivDiag/blob/master/vignettes/examples.html)
-
 ---
 
 ### Notes (to self/coauthors) for site maintenance 
 
+Examples are all currently in vignette. If we want examples for each
+documentation entry,
+
 + Add/edit examples in source files in `R/*.R`
-+ Run `setup.R` to rebuild documentation
++ Run `./setup.R` to rebuild documentation
   + (optionally) edit `_pkgdown.yml` and `DESCRPTION` for aesthetics + metadata
-+ Run `build_site.R` to rebuild site
++ Run `./build_site.R` to rebuild site
