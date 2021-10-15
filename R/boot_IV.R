@@ -31,8 +31,21 @@ boot_IV <- function(data, Y, D, Z, controls=NULL, FE = NULL, cl = NULL,
     n <- nrow(d0); p_iv <- length(Z)
     if (debug) print(c("p_iv :", p_iv))
     # fit first stage and store
-    out0 <- first_stage_coefs(data = d0, D = D, Z = Z, X = controls, FE = FE, weights = weights)
-    rho <- first_stage_rho(data = d0, D = D, Z = Z, X = controls, FE = FE, weights = weights)
+    out0 <- first_stage_coefs(data = d0, D = D, Z = Z,
+        X = controls, FE = FE, weights = weights)
+    ## Sensitivity analysis - bias threshold
+    rho  <- first_stage_rho(data = d0, D = D, Z = Z, X = controls, FE = FE, weights = weights)
+    x_tilde = partialer(Y = D, X = controls, FE = FE, data = d0, weights = weights)
+    sig_x = sd(x_tilde)
+    # error variance in naive OLS
+    fmla = formula_lfe(Y = Y, W = D, X = controls, D = FE, C = cl)
+    if (is.null(weights)==TRUE) {
+      m1 = robustify(lfe::felm(fmla, d0))
+    } else {
+      m1 = robustify(lfe::felm(fmla, d0, weights = d0[,weights]))
+    }
+    sig_epsi = sd(m1$residuals)
+    ### prep
     fs_coefs0 <- matrix(out0, p_iv, 1)
     if (debug) print(c("fs_coefs0", fs_coefs0))
     if (is.null(cl)==FALSE) { # find clusters
@@ -193,7 +206,13 @@ boot_IV <- function(data, Y, D, Z, controls=NULL, FE = NULL, cl = NULL,
         # first stage correlation coefficients
         rho_DZ = round(rho, prec),
         # ratio
-        ratio = round(ratio, prec)
+        ratio = round(ratio, prec),
+        # sensitivity analysis
+        Bias_threshold_pt_est = OLS.Coef  * (sig_x/sig_epsi) * rho,
+        Bias_thresh_ci_lb     = ols_ci[1] * (sig_x/sig_epsi) * rho,
+        ## constituent parts of bias computation
+        sig_x = sig_x,
+        sig_epsi = sig_epsi
         )
     }
     return(output)
