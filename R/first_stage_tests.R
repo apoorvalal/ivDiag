@@ -21,7 +21,7 @@
 #' @export
 first_stage_tests <- function(data, Y, D, Z, controls = NULL, FE = NULL, cl = NULL,
     weights = NULL, boot = TRUE, nboots = 1000, parallel = TRUE, seed = 94305, cores = NULL,
-    prec = 4) {
+    prec = 4 , plot = F) {
     ############################################################
     # data prep
     ############################################################
@@ -40,11 +40,13 @@ first_stage_tests <- function(data, Y, D, Z, controls = NULL, FE = NULL, cl = NU
       dmod = fixest::feols(formula_fixest(D, X = controls, W = Z, D = FE),
         data = df)
     }
-    dhat = predict(dmod)
-    dtilde = partialer(D, c(Z, controls), FE = FE, weights = weights, data = df)
-    scatter = ggplot(data.frame(dtilde, dhat), aes(dtilde, dhat)) +
-            geom_point() + geom_smooth() +
-            labs(x = "Treatment (residualised)", y = "Predicted Treatment")
+    if(scatter == TRUE){
+      dhat = predict(dmod)
+      dtilde = partialer(D, c(Z, controls), FE = FE, weights = weights, data = df)
+      scatter = ggplot(data.frame(dtilde, dhat), aes(dtilde, dhat)) +
+              geom_point() + geom_smooth() +
+              labs(x = "Treatment (residualised)", y = "Predicted Treatment")
+    }
     ############################################################
     # fit first stage and store
     out0 <- first_stage_coefs(data = d0, D = D, Z = Z, X = controls, FE = FE, weights = weights)
@@ -133,7 +135,9 @@ first_stage_tests <- function(data, Y, D, Z, controls = NULL, FE = NULL, cl = NU
       F.cluster <- NA
     }
     F_stat <- c(F.standard, F.robust, F.cluster, F.boot, AR_res$Fstat)
+
     names(F_stat) <- c("F.standard", "F.robust", "F.cluster", "F.boot", "F.AR")
+    if(scatter == TRUE){
     output <- list(
         # bootstrap F stat
         F_stat = round(F_stat, prec),
@@ -150,6 +154,23 @@ first_stage_tests <- function(data, Y, D, Z, controls = NULL, FE = NULL, cl = NU
         AR.ci = AR_res$ci,
         # scatterplot
         scatterplot = scatter
-      )
+        )
+    } else{
+      output <- list(
+        # bootstrap F stat
+        F_stat = round(F_stat, prec),
+        # number of instruments
+        p_iv = p_iv,
+        # number of observations
+        N = n,
+        # number of clusters
+        N_cl = ncl,
+        # first stage correlation coefficients
+        rho_DZ = round(rho, prec),
+        # AR Results
+        AR.ci_inf = AR_res$ci.info,
+        AR.ci = AR_res$ci,
+        )
+    }
     return(output)
 }

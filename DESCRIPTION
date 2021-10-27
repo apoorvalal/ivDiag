@@ -18,7 +18,6 @@ Imports:
     foreach,
     parallel,
     doParallel,
-    future,
     lfe,
     fixest,
     ggplot2,

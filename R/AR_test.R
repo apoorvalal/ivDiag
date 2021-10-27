@@ -18,13 +18,11 @@ AR_test = function(data, Y, D, Z, X, FE, prec = 3){
   Ztil = partialer(Z, X = X, FE = FE, data = data, weights = weights)
   alpha = 0.05; n= length(Ztil);  k=mod$p;  l=length(Z)
   ZtilQR = qr(Ztil)
-
   # compute F
   tmp = Ytil - 0 * Dtil # test null of \beta = 0
   Fstat         = c(sum(qr.fitted(ZtilQR, tmp)^2))/
                   c(sum(tmp^2)- sum(qr.fitted(ZtilQR, tmp)^2))*(n-k-l)/l
   p.value=1-pf(Fstat, df1=l, df2=n-k-l)
-
   # CI construction ingredients
   cval          = qf(1-alpha, df1=l, df2=n-k-l)*l/(n-k-l)
   coef.beta0sq  = cval*sum(Dtil^2)-(cval+1)*sum(qr.fitted(ZtilQR, Dtil)^2)

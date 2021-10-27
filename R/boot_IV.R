@@ -18,7 +18,7 @@
 #' @export
 boot_IV <- function(data, Y, D, Z, controls=NULL, FE = NULL, cl = NULL,
     weights = NULL, nboots = 1000, parallel = TRUE, seed = 94305, cores = NULL,
-    prec = 4, debug = FALSE, public = TRUE) {
+    prec = 4, debug = FALSE, sens = TRUE) {
     ## Bootstrap OLS and IV SE/CI + F Stat for a single-instrument, single-treatment setting
     t0 <- Sys.time()
     set.seed(seed)
@@ -175,8 +175,9 @@ boot_IV <- function(data, Y, D, Z, controls=NULL, FE = NULL, cl = NULL,
         ratio[(i+1)]  <- iv.coef.tmp/OLS.Coef
       }
     }
+
     # save results
-    if (public == TRUE) { # do not publish rho and ratio
+    if (sens == FALSE) { # do not publish rho and ratio
       output <- list(
         # OLS and IV results
         est_ols =  round(est_ols, prec),
@@ -191,6 +192,14 @@ boot_IV <- function(data, Y, D, Z, controls=NULL, FE = NULL, cl = NULL,
         N_cl = ncl
         )
     } else {
+      # return data frame with sensitivity results
+      sens_calc = data.frame(
+            Bias_threshold_pt_est = OLS.Coef  * (sig_x/sig_epsi) * rho,
+            Bias_thresh_ci_lb     = ols_ci[1] * (sig_x/sig_epsi) * rho,
+            ## constituent parts of bias computation
+            sig_x = sig_x,
+            sig_epsi = sig_epsi
+      )
       output <- list(
         # OLS and IV results
         est_ols =  round(est_ols, prec),
@@ -206,14 +215,9 @@ boot_IV <- function(data, Y, D, Z, controls=NULL, FE = NULL, cl = NULL,
         # first stage correlation coefficients
         rho_DZ = round(rho, prec),
         # ratio
-        ratio = round(ratio, prec),
+        # ratio = round(ratio, prec),
         # sensitivity analysis
-        Bias_threshold_pt_est = OLS.Coef  * (sig_x/sig_epsi) * rho,
-        Bias_thresh_ci_lb     = ols_ci[1] * (sig_x/sig_epsi) * rho,
-        ## constituent parts of bias computation
-        sig_x = sig_x,
-        sig_epsi = sig_epsi
-        )
+        sens = sens_calc)
     }
     return(output)
 }
