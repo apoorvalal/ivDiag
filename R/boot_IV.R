@@ -35,16 +35,18 @@ boot_IV <- function(data, Y, D, Z, controls=NULL, FE = NULL, cl = NULL,
         X = controls, FE = FE, weights = weights)
     ## Sensitivity analysis - bias threshold
     rho  <- first_stage_rho(data = d0, D = D, Z = Z, X = controls, FE = FE, weights = weights)
-    x_tilde = partialer(Y = D, X = controls, FE = FE, data = d0, weights = weights)
-    sig_x = sd(x_tilde)
-    # error variance in naive OLS
-    fmla = formula_lfe(Y = Y, W = D, X = controls, D = FE, C = cl)
-    if (is.null(weights)==TRUE) {
-      m1 = robustify(lfe::felm(fmla, d0))
-    } else {
-      m1 = robustify(lfe::felm(fmla, d0, weights = d0[,weights]))
-    }
-    sig_e = sd(m1$residuals)
+    if (sens == TRUE) {
+      D_tilde = partialer(Y = D, X = controls, FE = FE, data = d0, weights = weights)
+      sig_D = sd(D_tilde)
+      # error variance in naive OLS
+      fmla = formula_lfe(Y = Y, W = D, X = controls, D = FE, C = cl)
+      if (is.null(weights)==TRUE) {
+        m1 = robustify(lfe::felm(fmla, d0))
+      } else {
+        m1 = robustify(lfe::felm(fmla, d0, weights = d0[,weights]))
+      }
+      sig_e = sd(m1$residuals)
+    }    
     ### prep
     fs_coefs0 <- matrix(out0, p_iv, 1)
     if (debug) print(c("fs_coefs0", fs_coefs0))
@@ -193,14 +195,14 @@ boot_IV <- function(data, Y, D, Z, controls=NULL, FE = NULL, cl = NULL,
         )
     } else {
       # return data frame with sensitivity results
-      sens_calc = data.frame(
-            bias_thresh_pt_est = OLS.Coef  * (sig_x/sig_e) * rho,
-            bias_thresh_ci_lb     = ols_ci[1] * (sig_x/sig_e) * rho,
-            ## constituent parts of bias computation
-            sig_x = sig_x,
-            sig_e = sig_e
-      )
-      rownames(sens_calc) <- NULL
+      thresh_pt_est <- abs(IV.Coef)  * (sig_D/sig_e) * abs(rho)
+      if (iv_ci[1] < 0 && iv_ci[2]>0) { # CI cover 0
+        thresh_signif <- NA
+      } else {
+        thresh_signif <- min(abs(iv_ci)) * (sig_D/sig_e) * abs(rho)
+      }
+      sens_calc = c(thresh_pt_est, thresh_signif, sig_D, sig_e)
+      names(sens_calc) <- c("thresh_pt_est", "thresh_signif", "sig_D", "sig_e")
       output <- list(
         # OLS and IV results
         est_ols =  round(est_ols, prec),
@@ -214,11 +216,11 @@ boot_IV <- function(data, Y, D, Z, controls=NULL, FE = NULL, cl = NULL,
         # number of clusters
         N_cl = ncl,
         # first stage correlation coefficients
-        rho_DZ = round(rho, prec),
+        rho_ZD = round(rho, prec),
         # ratio
         # ratio = round(ratio, prec),
         # sensitivity analysis
-        sens = round(sens_calc, (prec+2))
+        sens_rho_Ze = round(sens_calc, prec)
           )
     }
     return(output)

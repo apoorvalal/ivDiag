@@ -1,6 +1,6 @@
 Package: ivDiag
 Title: Diagnostic tools for Instrumental Variables designs
-Version: 0.0.0.9000
+Version: 0.0.1.0000
 Authors@R:
     person(given = "Apoorva", family = "Lal", role = c("aut", "cre"),
            email = "lal.apoorva@gmail.com")
