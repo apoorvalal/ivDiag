@@ -12,6 +12,7 @@
 #' @param cores number of cores to parallelise across (defaults to all - 1)
 #' @param prec precision of summary (4 by default)
 #' @param seed seed
+#' @param scatter scatterplot of treatment against predicted treatment (to diagnose functional form)
 #' @return list of results
 #' @importFrom lfe felm
 #' @importFrom foreach foreach `%dopar%`
@@ -21,7 +22,7 @@
 #' @export
 first_stage_tests <- function(data, Y, D, Z, controls = NULL, FE = NULL, cl = NULL,
     weights = NULL, boot = TRUE, nboots = 1000, parallel = TRUE, seed = 94305, cores = NULL,
-    prec = 4 , plot = F) {
+    prec = 4 , scatter = F) {
     ############################################################
     # data prep
     ############################################################
