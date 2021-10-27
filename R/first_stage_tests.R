@@ -170,7 +170,7 @@ first_stage_tests <- function(data, Y, D, Z, controls = NULL, FE = NULL, cl = NU
         rho_DZ = round(rho, prec),
         # AR Results
         AR.ci_inf = AR_res$ci.info,
-        AR.ci = AR_res$ci,
+        AR.ci = AR_res$ci
         )
     }
     return(output)
