@@ -77,7 +77,10 @@ AR_test = function(data, Y, D, Z, X, FE, prec = 3){
       }
     }
   }
-  return(list(Fstat=Fstat, df=c(l, n-k-l), p.value=p.value,
-              ci.info=info, ci=ci))
+  return(list(Fstat=Fstat, 
+    df=c(l, n-k-l), 
+    p.value=p.value,
+    ci=ci,
+    ci.info=info))
 
 }

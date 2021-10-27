@@ -44,7 +44,7 @@ boot_IV <- function(data, Y, D, Z, controls=NULL, FE = NULL, cl = NULL,
     } else {
       m1 = robustify(lfe::felm(fmla, d0, weights = d0[,weights]))
     }
-    sig_epsi = sd(m1$residuals)
+    sig_e = sd(m1$residuals)
     ### prep
     fs_coefs0 <- matrix(out0, p_iv, 1)
     if (debug) print(c("fs_coefs0", fs_coefs0))
@@ -194,12 +194,13 @@ boot_IV <- function(data, Y, D, Z, controls=NULL, FE = NULL, cl = NULL,
     } else {
       # return data frame with sensitivity results
       sens_calc = data.frame(
-            Bias_threshold_pt_est = OLS.Coef  * (sig_x/sig_epsi) * rho,
-            Bias_thresh_ci_lb     = ols_ci[1] * (sig_x/sig_epsi) * rho,
+            bias_thresh_pt_est = OLS.Coef  * (sig_x/sig_e) * rho,
+            bias_thresh_ci_lb     = ols_ci[1] * (sig_x/sig_e) * rho,
             ## constituent parts of bias computation
             sig_x = sig_x,
-            sig_epsi = sig_epsi
+            sig_e = sig_e
       )
+      rownames(sens_calc) <- NULL
       output <- list(
         # OLS and IV results
         est_ols =  round(est_ols, prec),
@@ -217,7 +218,8 @@ boot_IV <- function(data, Y, D, Z, controls=NULL, FE = NULL, cl = NULL,
         # ratio
         # ratio = round(ratio, prec),
         # sensitivity analysis
-        sens = sens_calc)
+        sens = round(sens_calc, (prec+2))
+          )
     }
     return(output)
 }
