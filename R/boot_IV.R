@@ -18,7 +18,7 @@
 #' @export
 boot_IV <- function(data, Y, D, Z, controls=NULL, FE = NULL, cl = NULL,
     weights = NULL, nboots = 1000, parallel = TRUE, seed = 94305, cores = NULL,
-    prec = 4, debug = FALSE, sens = TRUE) {
+    prec = 4, debug = FALSE) {
     ## Bootstrap OLS and IV SE/CI + F Stat for a single-instrument, single-treatment setting
     t0 <- Sys.time()
     set.seed(seed)
@@ -33,20 +33,20 @@ boot_IV <- function(data, Y, D, Z, controls=NULL, FE = NULL, cl = NULL,
     # fit first stage and store
     out0 <- first_stage_coefs(data = d0, D = D, Z = Z,
         X = controls, FE = FE, weights = weights)
-    ## Sensitivity analysis - bias threshold
     rho  <- first_stage_rho(data = d0, D = D, Z = Z, X = controls, FE = FE, weights = weights)
-    if (sens == TRUE) {
-      D_tilde = partialer(Y = D, X = controls, FE = FE, data = d0, weights = weights)
-      sig_D = sd(D_tilde)
-      # error variance in naive OLS
-      fmla = formula_lfe(Y = Y, W = D, X = controls, D = FE, C = cl)
-      if (is.null(weights)==TRUE) {
-        m1 = robustify(lfe::felm(fmla, d0))
-      } else {
-        m1 = robustify(lfe::felm(fmla, d0, weights = d0[,weights]))
-      }
-      sig_e = sd(m1$residuals)
-    }    
+    # ## Sensitivity analysis - bias threshold
+    # if (sens == TRUE) {
+    #   D_tilde = partialer(Y = D, X = controls, FE = FE, data = d0, weights = weights)
+    #   sig_D = sd(D_tilde)
+    #   # error variance in naive OLS
+    #   fmla = formula_lfe(Y = Y, W = D, X = controls, D = FE, C = cl)
+    #   if (is.null(weights)==TRUE) {
+    #     m1 = robustify(lfe::felm(fmla, d0))
+    #   } else {
+    #     m1 = robustify(lfe::felm(fmla, d0, weights = d0[,weights]))
+    #   }
+    #   sig_e = sd(m1$residuals)
+    # }    
     ### prep
     fs_coefs0 <- matrix(out0, p_iv, 1)
     if (debug) print(c("fs_coefs0", fs_coefs0))
@@ -179,50 +179,62 @@ boot_IV <- function(data, Y, D, Z, controls=NULL, FE = NULL, cl = NULL,
     }
 
     # save results
-    if (sens == FALSE) { # do not publish rho and ratio
-      output <- list(
-        # OLS and IV results
-        est_ols =  round(est_ols, prec),
-        est_2sls = round(est_2sls, prec),
-        # bootstrap F stat
-        F_stat = round(F_stat, prec),
-        # number of instruments
-        p_iv = p_iv,
-        # number of observations
-        N = n,
-        # number of clusters
-        N_cl = ncl
-        )
-    } else {
-      # return data frame with sensitivity results
-      thresh_pt_est <- abs(IV.Coef)  * (sig_D/sig_e) * abs(rho)
-      if (iv_ci[1] < 0 && iv_ci[2]>0) { # CI cover 0
-        thresh_signif <- NA
-      } else {
-        thresh_signif <- min(abs(iv_ci)) * (sig_D/sig_e) * abs(rho)
-      }
-      sens_calc = c(thresh_pt_est, thresh_signif, sig_D, sig_e)
-      names(sens_calc) <- c("thresh_pt_est", "thresh_signif", "sig_D", "sig_e")
-      output <- list(
-        # OLS and IV results
-        est_ols =  round(est_ols, prec),
-        est_2sls = round(est_2sls, prec),
-        # bootstrap F stat
-        F_stat = round(F_stat, prec),
-        # number of instruments
-        p_iv = p_iv,
-        # number of observations
-        N = n,
-        # number of clusters
-        N_cl = ncl,
-        # first stage correlation coefficients
-        rho_ZD = round(rho, prec),
-        # ratio
-        # ratio = round(ratio, prec),
-        # sensitivity analysis
-        sens_rho_Ze = round(sens_calc, prec)
-          )
-    }
+    output <- list(
+      # OLS and IV results
+      est_ols =  round(est_ols, prec),
+      est_2sls = round(est_2sls, prec),
+      # bootstrap F stat
+      F_stat = round(F_stat, prec),
+      # number of instruments
+      p_iv = p_iv,
+      # number of observations
+      N = n,
+      # number of clusters
+      N_cl = ncl
+    )
+    # if (sens == FALSE) { # do not publish rho and ratio
+    #   output <- list(
+    #     # OLS and IV results
+    #     est_ols =  round(est_ols, prec),
+    #     est_2sls = round(est_2sls, prec),
+    #     # bootstrap F stat
+    #     F_stat = round(F_stat, prec),
+    #     # number of instruments
+    #     p_iv = p_iv,
+    #     # number of observations
+    #     N = n,
+    #     # number of clusters
+    #     N_cl = ncl
+    #     )
+    # } else {
+    #   thresh_pt_est <- abs(IV.Coef)  * (sig_D/sig_e) * abs(rho)
+    #   if (iv_ci[1] < 0 && iv_ci[2]>0) { # CI cover 0
+    #     thresh_signif <- NA
+    #   } else {
+    #     thresh_signif <- min(abs(iv_ci)) * (sig_D/sig_e) * abs(rho)
+    #   }
+    #   sens_calc = c(thresh_pt_est, thresh_signif, sig_D, sig_e)
+    #   names(sens_calc) <- c("thresh_pt_est", "thresh_signif", "sig_D", "sig_e")
+    #   output <- list(
+    #     # OLS and IV results
+    #     est_ols =  round(est_ols, prec),
+    #     est_2sls = round(est_2sls, prec),
+    #     # bootstrap F stat
+    #     F_stat = round(F_stat, prec),
+    #     # number of instruments
+    #     p_iv = p_iv,
+    #     # number of observations
+    #     N = n,
+    #     # number of clusters
+    #     N_cl = ncl,
+    #     # first stage correlation coefficients
+    #     rho_ZD = round(rho, prec),
+    #     # ratio
+    #     # ratio = round(ratio, prec),
+    #     # sensitivity analysis
+    #     sens_rho_Ze = round(sens_calc, prec)
+    #       )
+    # }
     return(output)
 }
 
