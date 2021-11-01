@@ -18,7 +18,8 @@ first_stage_tests(
   parallel = TRUE,
   seed = 94305,
   cores = NULL,
-  prec = 4
+  prec = 4,
+  scatter = F
 )
 }
 \arguments{
@@ -47,6 +48,8 @@ first_stage_tests(
 \item{cores}{number of cores to parallelise across (defaults to all - 1)}
 
 \item{prec}{precision of summary (4 by default)}
+
+\item{scatter}{scatterplot of treatment against predicted treatment (to diagnose functional form)}
 }
 \value{
 list of results

@@ -31,7 +31,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">ivDiag</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.0.0.9000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.0.1.0000</span>
       </span>
     </div>
 
@@ -76,13 +76,13 @@
 
       
 
-      </header><script src="examples_files/header-attrs-2.8.6/header-attrs.js"></script><div class="row">
+      </header><script src="examples_files/header-attrs-2.11/header-attrs.js"></script><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
       <h1 data-toc-skip>ivDiag usage examples</h1>
                         <h4 class="author">Apoorva Lal</h4>
             
-            <h4 class="date">August 27, 2021</h4>
+            <h4 class="date">November 01, 2021</h4>
       
       
       <div class="hidden name"><code>examples.rmd</code></div>
@@ -126,7 +126,7 @@
 <code class="sourceCode R"><span class="va">fst</span> |&gt; <span class="fu"><a href="https://rdrr.io/r/base/print.html">print</a></span><span class="op">(</span><span class="op">)</span></code></pre></div>
 <pre><code>## $F_stat
 ## F.standard   F.robust  F.cluster     F.boot       F.AR 
-##   186.0359    94.9238    76.0563    88.2115     9.3432 
+##   186.0359    94.9238    76.0563    76.9577     9.3432 
 ## 
 ## $p_iv
 ## [1] 1
@@ -140,15 +140,12 @@
 ## $rho_DZ
 ## [1] 0.1255
 ## 
-## $AR.ci_inf
-## [1] "[0.083, 0.34]"
-## 
 ## $AR.ci
 ##           lower     upper
 ## [1,] 0.08260178 0.3403842
 ## 
-## $scatterplot</code></pre>
-<p><img src="examples_files/figure-html/unnamed-chunk-3-1.png" width="700"></p>
+## $AR.ci_inf
+## [1] "[0.083, 0.34]"</code></pre>
 </div>
 <div id="bootstrap-block-bootstrap-standard-errors-and-f-statistic" class="section level2">
 <h2 class="hasAnchor">
@@ -158,20 +155,20 @@
   cl<span class="op">=</span><span class="va">cl</span>, weights<span class="op">=</span><span class="va">weights</span>, nboot <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></code></pre></div>
 <pre><code>## Bootstrapping:
 ## Parallelising 100 reps on 7 cores 
-## Bootstrap took 18.318 sec.</code></pre>
+## Bootstrap took 21.360 sec.</code></pre>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">bootres</span> |&gt; <span class="fu"><a href="https://rdrr.io/r/base/print.html">print</a></span><span class="op">(</span><span class="op">)</span></code></pre></div>
 <pre><code>## $est_ols
 ##       Coef       SE.t       SE.b  CI.b 2.5% CI.b 97.5% 
-##     0.4387     0.0079     0.0122     0.4140     0.4610 
+##     0.4387     0.0079     0.0124     0.4150     0.4630 
 ## 
 ## $est_2sls
 ##       Coef       SE.t       SE.b  CI.b 2.5% CI.b 97.5% 
-##     0.2163     0.0650     0.0806     0.0760     0.3610 
+##     0.2163     0.0650     0.0766     0.0660     0.3470 
 ## 
 ## $F_stat
 ## F.standard   F.robust  F.cluster     F.boot 
-##   186.0359    94.9238    76.0563    76.8193 
+##   186.0359    94.9238    76.0563    75.8787 
 ## 
 ## $p_iv
 ## [1] 1
@@ -180,7 +177,14 @@
 ## [1] 14562
 ## 
 ## $N_cl
-## [1] 2756</code></pre>
+## [1] 2756
+## 
+## $rho_ZD
+## [1] 0.1255
+## 
+## $sens_rho_Ze
+## thresh_pt_est thresh_signif         sig_D         sig_e 
+##        0.0319        0.0097        0.0414        0.0352</code></pre>
 <div id="weak-iv-robust-anderson-rubin-test" class="section level3">
 <h3 class="hasAnchor">
 <a href="#weak-iv-robust-anderson-rubin-test" class="anchor"></a>Weak-IV robust Anderson-Rubin test</h3>
@@ -196,12 +200,12 @@
 ## $p.value
 ## [1] 0.002243184
 ## 
-## $ci.info
-## [1] "[0.083, 0.34]"
-## 
 ## $ci
 ##           lower     upper
-## [1,] 0.08260178 0.3403842</code></pre>
+## [1,] 0.08260178 0.3403842
+## 
+## $ci.info
+## [1] "[0.083, 0.34]"</code></pre>
 </div>
 </div>
 </div>

@@ -19,7 +19,7 @@ boot_IV(
   cores = NULL,
   prec = 4,
   debug = FALSE,
-  public = TRUE
+  sens = TRUE
 )
 }
 \arguments{

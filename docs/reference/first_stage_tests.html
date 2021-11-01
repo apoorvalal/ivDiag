@@ -72,7 +72,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">ivDiag</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.0.0.9000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.0.1.0000</span>
       </span>
     </div>
 
@@ -143,7 +143,8 @@
   parallel <span class='op'>=</span> <span class='cn'>TRUE</span>,
   seed <span class='op'>=</span> <span class='fl'>94305</span>,
   cores <span class='op'>=</span> <span class='cn'>NULL</span>,
-  prec <span class='op'>=</span> <span class='fl'>4</span>
+  prec <span class='op'>=</span> <span class='fl'>4</span>,
+  scatter <span class='op'>=</span> <span class='cn'>F</span>
 <span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -200,6 +201,10 @@
     <tr>
       <th>prec</th>
       <td><p>precision of summary (4 by default)</p></td>
+    </tr>
+    <tr>
+      <th>scatter</th>
+      <td><p>scatterplot of treatment against predicted treatment (to diagnose functional form)</p></td>
     </tr>
     </table>
 
