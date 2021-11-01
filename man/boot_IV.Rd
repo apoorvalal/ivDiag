@@ -18,8 +18,7 @@ boot_IV(
   seed = 94305,
   cores = NULL,
   prec = 4,
-  debug = FALSE,
-  sens = TRUE
+  debug = FALSE
 )
 }
 \arguments{
