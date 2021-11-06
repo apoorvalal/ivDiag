@@ -6,16 +6,22 @@
 #' @param Z instrument (string)
 #' @param X control variables (character vector)
 #' @param FE fixed effects (character vector)
+#' @param weights weighting vector
 #' @param prec precision of CI in string
 #' @importFrom lfe felm
 #' @export
-AR_test = function(data, Y, D, Z, X, FE, prec = 3){
+AR_test = function(data, Y, D, Z, X, FE, weights = NULL, prec = 3){
+
+  # keep rows with complete data
+  data <- data[, c(Y, D, Z, X, FE, weights)]
+  data <- data[complete.cases(data), ]
+    
   # fit IV model in FELM to get correct DoFs
-  mod = felm(formula_lfe(Y = Y, W = D, X = X, Z = Z, D = FE), data = data)
+  mod = suppressWarnings(felm(formula_lfe(Y = Y, W = D, X = X, Z = Z, D = FE), data = data))
   # residualise
-  Ytil = partialer(Y, X = X, FE = FE, data = data, weights = weights)
-  Dtil = partialer(D, X = X, FE = FE, data = data, weights = weights)
-  Ztil = partialer(Z, X = X, FE = FE, data = data, weights = weights)
+  Ytil = suppressWarnings(partialer(Y, X = X, FE = FE, data = data, weights = weights))
+  Dtil = suppressWarnings(partialer(D, X = X, FE = FE, data = data, weights = weights))
+  Ztil = suppressWarnings(partialer(Z, X = X, FE = FE, data = data, weights = weights))
   alpha = 0.05; n= length(Ztil);  k=mod$p;  l=length(Z)
   ZtilQR = qr(Ztil)
   # compute F
