@@ -19,6 +19,7 @@
 boot_IV <- function(data, Y, D, Z, controls=NULL, FE = NULL, cl = NULL,
     weights = NULL, nboots = 1000, parallel = TRUE, seed = 94305, cores = NULL,
     prec = 4, debug = FALSE) {
+   
     ## Bootstrap OLS and IV SE/CI + F Stat for a single-instrument, single-treatment setting
     t0 <- Sys.time()
     set.seed(seed)
@@ -31,8 +32,7 @@ boot_IV <- function(data, Y, D, Z, controls=NULL, FE = NULL, cl = NULL,
     n <- nrow(d0); p_iv <- length(Z)
     if (debug) print(c("p_iv :", p_iv))
     # fit first stage and store
-    out0 <- first_stage_coefs(data = d0, D = D, Z = Z,
-        X = controls, FE = FE, weights = weights)
+    out0 <- OLS(data=d0, Y=D, D=Z, X=controls, FE=FE, cl=cl, weights=weights)$coef
     rho  <- first_stage_rho(data = d0, D = D, Z = Z, X = controls, FE = FE, weights = weights)
     # ## Sensitivity analysis - bias threshold
     # if (sens == TRUE) {
@@ -58,6 +58,36 @@ boot_IV <- function(data, Y, D, Z, controls=NULL, FE = NULL, cl = NULL,
     } else {
         ncl <- NULL
     }
+
+    #####################################################
+    ## point estimates - main data
+    #####################################################
+
+    # OLS
+    olsfit <- OLS(data = d0, Y=Y, D=D, X=controls, FE=FE, cl=cl, weights=weights)
+    OLS.Coef <- olsfit$coef
+    OLS.SE <- olsfit$se
+    OLS.t <- OLS.Coef/OLS.SE
+    OLS.p <- (1 - pnorm(abs(OLS.t)))*2
+    # 2SLS    
+    ivfit <- IV(data = d0, Y=Y, D=D, Z=Z, X=controls, FE=FE, cl=cl, weights=weights)
+    IV.Coef <- ivfit$coef
+    IV.SE <- ivfit$se
+    IV.t <- IV.Coef/IV.SE
+    IV.p <- (1 - pnorm(abs(IV.t)))*2
+    # reduced form
+    rffit <- OLS(data = d0, Y=Y, D=Z, X=controls, FE=FE, cl=cl, weights=weights)
+    RF.Coef <- matrix(rffit$coef, p_iv, 1)
+    RF.SE <- matrix(rffit$se, p_iv, 1)
+    RF.t <- RF.Coef/RF.SE
+    RF.p <- (1 - pnorm(abs(RF.t)))*2
+    # first stage
+    fsfit <- OLS(data = d0, Y=D, D=Z, X=controls, FE=FE, cl=cl, weights=weights)
+    FS.Coef <- matrix(fsfit$coef, p_iv, 1)
+    FS.SE <- matrix(fsfit$se, p_iv, 1)
+    FS.t <- FS.Coef/FS.SE
+    FS.p <- (1 - pnorm(abs(FS.t)))*2
+    
     #####################################################
     # Bootstrap function
     #####################################################
@@ -73,18 +103,28 @@ boot_IV <- function(data, Y, D, Z, controls=NULL, FE = NULL, cl = NULL,
         }
         s <- d0[smp,]
         # init container vector for results
-        res <- rep(NA, (2 + p_iv)) # first 2 cols are OLS and IV estimates, last p_iv are first stage IV coefs
-        res[1] <- OLS(data=s, D=D, Y=Y, X=controls, FE=FE, cl=cl, weights=weights)$coef
-        res[2] <- IV(data=s, D=D, Y=Y, Z=Z, X=controls, FE=FE, cl=cl, weights=weights)$coef
+        # first 3 cols are OLS and IV coefs, then Reduced Form & First Stage coefs; store two t stats (OLS & IV)
+        ncoef <- (2+2*p_iv)
+        res <- rep(NA, ncoef+2)
+        reg.ols <- OLS(data=s, Y=Y, D=D, X=controls, FE=FE, cl=cl, weights=weights)
+        reg.iv <- IV(data=s, Y=Y, D=D, Z=Z, X=controls, FE=FE, cl=cl, weights=weights)
+        res[1] <- reg.ols$coef
+        res[2] <- reg.iv$coef
+        res[1+ncoef] <- (reg.ols$coef - OLS.Coef)/reg.ols$se 
+        res[2+ncoef] <- (reg.iv$coef - IV.Coef)/reg.iv$se
+        # reduced form
+        reg.rf <- OLS(data=s, Y=Y, D=Z, X=controls, FE=FE, cl=cl, weights=weights)
+        res[3:(2+p_iv)] <- reg.rf$coef
         # first stage coefficients
-        res[3:(2+p_iv)] <- first_stage_coefs(data=s, D=D, Z=Z, X=controls, FE = FE, weights = weights)
+        reg.fs <- OLS(data=s, Y=D, D=Z, X=controls, FE=FE, cl=cl, weights=weights)
+        res[(3+p_iv):(2+p_iv*2)] <-reg.fs$coef
         return(res)
     }
     # in case there's an error
     one.boot <- function() {
       est <- try(boot.core(), silent = TRUE)
       if ('try-error' %in% class(est)) {
-        est0 <- rep(NA, (2 + p_iv))
+        est0 <- rep(NA, (4 + 4*p_iv))
         return(est0)
       } else {
         return(est)
@@ -95,9 +135,9 @@ boot_IV <- function(data, Y, D, Z, controls=NULL, FE = NULL, cl = NULL,
     # boot looper - series or parallel
     #####################################################
     if (parallel == FALSE) {
-        coefs.boot = matrix(NA, nboots, 2 + p_iv)
+        boot.out = matrix(NA, nboots, 4+4*p_iv)
         for (i in 1:nboots) {
-            coefs.boot[i,] <- one.boot()
+            boot.out[i,] <- one.boot()
         }
     } else { # parallel computing
         # parallelisation setup
@@ -107,8 +147,8 @@ boot_IV <- function(data, Y, D, Z, controls=NULL, FE = NULL, cl = NULL,
         # register
         cl.parallel <- future::makeClusterPSOCK(cores, verbose = FALSE)
         doParallel::registerDoParallel(cl.parallel)
-        expfun <- c("OLS", "IV", "first_stage_coefs", "formula_lfe", "robustify")
-        coefs.boot <- foreach (i=1:nboots,.combine=rbind, .inorder=FALSE,
+        expfun <- c("OLS", "IV", "formula_lfe", "robustify")
+        boot.out <- foreach (i=1:nboots,.combine=rbind, .inorder=FALSE,
             .export = expfun,
             .packages = c("lfe")) %dopar% {
             return(one.boot())
@@ -118,19 +158,26 @@ boot_IV <- function(data, Y, D, Z, controls=NULL, FE = NULL, cl = NULL,
     ##############################
     # post-bootstrap processing
     ##############################
-    if (debug) {return(coefs.boot)}
+    if (debug) {return(boot.out)}
     # drop NAs
-    coefs.boot <- coefs.boot[complete.cases(coefs.boot),]
+    boot.out <- boot.out[complete.cases(boot.out),]
     # OLS and IV mean and standard errors
-    OLS_IV_bootout <- coefs.boot[, 1:2]
-    bootMeans <- apply(OLS_IV_bootout, 2, mean)
-    bootSE <- apply(OLS_IV_bootout, 2, sd)
+    boot.coefs <- boot.out[, 1:(2+2*p_iv)]
+    boot.tstat <- boot.out[, (3+2*p_iv):(4+2*p_iv)]
+    bootSE <- apply(boot.coefs, 2, sd)
+    OLS.boot.SE <- bootSE[1]
+    IV.boot.SE <- bootSE[2]
+    RF.boot.SE <- bootSE[3:(p_iv+2)]
+    FS.boot.SE <- bootSE[(3+p_iv):(p_iv*2+2)]
     # OLS and IV CIs
     CI.lvl <- c((1-0.95)/2, (1-(1-0.95)/2))
-    ols_ci <- round(quantile(OLS_IV_bootout[, 1], CI.lvl), 3)
-    iv_ci  <- round(quantile(OLS_IV_bootout[, 2], CI.lvl), 3)
-    # Calculate F'
-    FStat_bootout <- coefs.boot[, 3:ncol(coefs.boot)]
+    OLS.boot.ci <- quantile(boot.coefs[, 1], CI.lvl)
+    IV.boot.ci  <- quantile(boot.coefs[, 2], CI.lvl)
+    # reduced form and 1st stage 
+    RF.boot.ci <- t(apply(boot.coefs[, 3:(p_iv+2), drop = FALSE], 2, quantile, CI.lvl))
+    FS.boot.ci <- t(apply(boot.coefs[, (3+p_iv):(p_iv*2+2), drop = FALSE], 2, quantile, CI.lvl))
+    # Calculate F
+    FStat_bootout <- boot.out[, (3+p_iv):(p_iv*2+2)] # first stage
     F.boot = c((t(fs_coefs0) %*% solve(var(FStat_bootout)) %*% fs_coefs0)/p_iv)
     names(F.boot) <- "F.boot"
     # timing
@@ -140,18 +187,32 @@ boot_IV <- function(data, Y, D, Z, controls=NULL, FE = NULL, cl = NULL,
     ##############################
     # prep output
     ##############################
-    # point estimates - main data
-    olsfit <- OLS(data = d0, D=D, Y=Y, X=controls, FE=FE, cl=cl, weights=weights)
-    OLS.Coef <- olsfit$coef
-    OLS.SE <- olsfit$se
-    ivfit <- IV(data = d0, D=D, Y=Y, Z=Z, X=controls, FE=FE, cl=cl, weights=weights)
-    IV.Coef <- ivfit$coef
-    IV.SE <- ivfit$se
-    # put together
-    est_ols <- c(OLS.Coef, OLS.SE, bootSE[1], ols_ci)
-    est_2sls <- c(IV.Coef, IV.SE, bootSE[2], iv_ci)
-    names(est_ols) <-  c("Coef", "SE.t", "SE.b", "CI.b 2.5%", "CI.b 97.5%")
-    names(est_2sls) <- c("Coef", "SE.t", "SE.b", "CI.b 2.5%", "CI.b 97.5%")
+
+    # OLS
+    OLS.boot.t <- OLS.Coef/OLS.boot.SE
+    tmp.p <- sum(boot.coefs[,1] > 0)/nrow(boot.coefs)
+    OLS.boot.p <- ifelse(tmp.p > 0.5, 2*(1-tmp.p), 2*tmp.p)
+    # IV
+    IV.boot.t <- IV.Coef/IV.boot.SE
+    tmp.p <- sum(boot.coefs[,2] > 0)/nrow(boot.coefs)
+    IV.boot.p <- ifelse(tmp.p > 0.5, 2*(1-tmp.p), 2*tmp.p)
+    # Reduced form
+    tmp.p <- apply(boot.coefs[,3:(p_iv+2), drop = FALSE] > 0, 2, sum)/nrow(boot.coefs)
+    RF.boot.p <- ifelse(tmp.p > 0.5, 2*(1-tmp.p), 2*tmp.p)    
+    # First stage
+    tmp.p <- apply(boot.coefs[,(3+p_iv):(p_iv*2+2), drop = FALSE] > 0, 2, sum)/nrow(boot.coefs)
+    FS.boot.p <- ifelse(tmp.p > 0.5, 2*(1-tmp.p), 2*tmp.p)
+
+    ## Bootstrap refinement
+    # OLS
+    ct.ols <- quantile(abs(boot.tstat[,1]), 0.95) # critical value
+    OLS.rf.ci <- c(OLS.Coef - ct.ols * OLS.SE, OLS.Coef + ct.ols * OLS.SE)
+    OLS.rf.p <- sum(abs(OLS.t) < abs(boot.tstat[,1]))/nrow(boot.tstat) # bootstrap refined p-value
+    # IV
+    ct.2sls <- quantile(abs(boot.tstat[,2]), 0.95) # critical value
+    IV.rf.ci <- c(IV.Coef - ct.2sls * IV.SE, IV.Coef + ct.2sls * IV.SE)
+    IV.rf.p <- sum(abs(IV.t) < abs(boot.tstat[,2]))/nrow(boot.tstat) # bootstrap refined p-value
+ 
     # F.stats
     vcov <- get.vcov(data, D, Y, Z, X=controls, FE=FE, cl=cl, weights=weights)
     F.standard <- c((t(fs_coefs0) %*% solve(vcov[[1]]) %*% fs_coefs0)/p_iv)
@@ -173,18 +234,48 @@ boot_IV <- function(data, Y, D, Z, controls=NULL, FE = NULL, cl = NULL,
       ratio[1] <- IV.Coef/OLS.Coef
       # run individual IV regressions
       for (i in 1:p_iv) {
-        iv.coef.tmp <- IV(data = d0,  D=D, Y=Y, Z=Z[i], X=controls, FE=FE, cl=cl, weights=weights)$coef
+        iv.coef.tmp <- IV(data = d0,  Y=Y, D=D, Z=Z[i], X=controls, FE=FE, cl=cl, weights=weights)$coef
         ratio[(i+1)]  <- iv.coef.tmp/OLS.Coef
       }
     }
+
+    # tF procedure (using bootstrapped t and F)
+    tF.out <- tF(coef = IV.Coef, se = IV.boot.SE, Fstat = F.boot)
+    tF.cF <- tF.out[2]
+    names(tF.cF) <- NULL
+
+    # put together (OLS and IV estimates)
+    est_ols <- matrix(NA, 3, 6)
+    est_ols[1,] <- c(OLS.Coef, OLS.SE, OLS.t, OLS.Coef - 1.96 * OLS.SE, OLS.Coef + 1.96 * OLS.SE, OLS.p)
+    est_ols[2,] <- c(OLS.Coef, OLS.boot.SE, OLS.boot.t, OLS.boot.ci, OLS.boot.p)
+    est_ols[3,] <- c(OLS.Coef, OLS.SE, OLS.t, OLS.rf.ci, OLS.rf.p)
+    est_2sls <- matrix(NA, 4, 6)
+    est_2sls[1,] <- c(IV.Coef, IV.SE, IV.t, IV.Coef - 1.96 * IV.SE, IV.Coef + 1.96 * IV.SE, IV.p)
+    est_2sls[2,] <- c(IV.Coef, IV.boot.SE, IV.boot.t, IV.boot.ci, IV.boot.p)
+    est_2sls[3,] <- c(IV.Coef, IV.SE, IV.t, IV.rf.ci, IV.rf.p)
+    est_2sls[4,] <- c(IV.Coef, IV.boot.SE, IV.boot.t, tF.out[6:7], NA)
+    colnames(est_ols) <-  colnames(est_2sls) <-c("Coef", "SE", "t", "CI 2.5%", "CI 97.5%", "p.value")
+    rownames(est_ols) <- c("Asym", "Boot.c", "Boot.t")
+    rownames(est_2sls) <- c("Asym", "Boot.c",  "Boot.t", "Boot.tF")
+    
+    # put together (reduced form and first stage)
+    est_rf <- cbind(RF.Coef, RF.SE, RF.p, RF.boot.SE, RF.boot.ci, RF.boot.p)
+    est_fs <- cbind(FS.Coef, FS.SE, FS.p, FS.boot.SE, FS.boot.ci, FS.boot.p)
+    colnames(est_rf) <- colnames(est_fs) <- c("Coef", "SE.t", "p.value", "SE.b", "CI.b 2.5%", "CI.b 97.5%", "p.value.b")
+    rownames(est_rf) <- rownames(est_fs) <- Z
 
     # save results
     output <- list(
       # OLS and IV results
       est_ols =  round(est_ols, prec),
       est_2sls = round(est_2sls, prec),
+      # reduced form and first stage
+      est_rf = round(est_rf, prec),
+      est_fs = round(est_fs, prec),
       # bootstrap F stat
       F_stat = round(F_stat, prec),
+      # tF procedure
+      tF.cF = round(tF.cF, prec),
       # number of instruments
       p_iv = p_iv,
       # number of observations
