@@ -214,9 +214,14 @@ tF <- function(coef, se, Fstat) {
     2.13, 2.12, 2.11, 2.10, 2.10, 2.09, 2.08, 2.08, 2.07, 2.06, 2.06, 2.05, 2.04, 2.04, 2.03, 2.03, 2.02, 2.02, 
     2.01, 2.01, 2.00, 2.00, 1.99, 1.99, 1.99, 1.98, 1.98, 1.97, 1.97, 1.97, 1.96)
   F.sqrt <- sqrt(Fstat)
-  cF <- cF0[max(which(F0.sqrt < F.sqrt))] # critical value
+  if (F.sqrt < 2) {
+    cF <- cF0[1]
+  } else {
+    cF <- cF0[max(which(F0.sqrt < F.sqrt))] # critical value
+  }
   ci <- c(coef - cF * se, coef + cF * se)
-  out <- c(Fstat, cF, coef, se, tstat, ci)
+  p <- (1 - pnorm(abs(tstat)/(cF/1.96))) * 2  # adjusted p value
+  out <- c(Fstat, cF, coef, se, tstat, ci, p)
   names(out) <- c("F", "cF", "Coef", "SE", "t", "CI 2.5%", "CI 97.5%")
   return(out)
 }

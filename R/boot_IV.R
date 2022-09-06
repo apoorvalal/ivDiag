@@ -253,7 +253,7 @@ boot_IV <- function(data, Y, D, Z, controls=NULL, FE = NULL, cl = NULL,
     est_2sls[1,] <- c(IV.Coef, IV.SE, IV.t, IV.Coef - 1.96 * IV.SE, IV.Coef + 1.96 * IV.SE, IV.p)
     est_2sls[2,] <- c(IV.Coef, IV.boot.SE, IV.boot.t, IV.boot.ci, IV.boot.p)
     est_2sls[3,] <- c(IV.Coef, IV.SE, IV.t, IV.rf.ci, IV.rf.p)
-    est_2sls[4,] <- c(IV.Coef, IV.boot.SE, IV.boot.t, tF.out[6:7], NA)
+    est_2sls[4,] <- c(IV.Coef, IV.boot.SE, IV.boot.t, tF.out[6:8])
     colnames(est_ols) <-  colnames(est_2sls) <-c("Coef", "SE", "t", "CI 2.5%", "CI 97.5%", "p.value")
     rownames(est_ols) <- c("Asym", "Boot.c", "Boot.t")
     rownames(est_2sls) <- c("Asym", "Boot.c",  "Boot.t", "Boot.tF")
