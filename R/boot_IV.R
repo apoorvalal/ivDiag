@@ -31,25 +31,7 @@ boot_IV <- function(data, Y, D, Z, controls=NULL, FE = NULL, cl = NULL,
     d0 <- data[complete.cases(data), ]
     n <- nrow(d0); p_iv <- length(Z)
     if (debug) print(c("p_iv :", p_iv))
-    # fit first stage and store
-    out0 <- OLS(data=d0, Y=D, D=Z, X=controls, FE=FE, cl=cl, weights=weights)$coef
-    rho  <- first_stage_rho(data = d0, D = D, Z = Z, X = controls, FE = FE, weights = weights)
-    # ## Sensitivity analysis - bias threshold
-    # if (sens == TRUE) {
-    #   D_tilde = partialer(Y = D, X = controls, FE = FE, data = d0, weights = weights)
-    #   sig_D = sd(D_tilde)
-    #   # error variance in naive OLS
-    #   fmla = formula_lfe(Y = Y, W = D, X = controls, D = FE, C = cl)
-    #   if (is.null(weights)==TRUE) {
-    #     m1 = robustify(lfe::felm(fmla, d0))
-    #   } else {
-    #     m1 = robustify(lfe::felm(fmla, d0, weights = d0[,weights]))
-    #   }
-    #   sig_e = sd(m1$residuals)
-    # }    
     ### prep
-    fs_coefs0 <- matrix(out0, p_iv, 1)
-    if (debug) print(c("fs_coefs0", fs_coefs0))
     if (is.null(cl)==FALSE) { # find clusters
         d0 <- d0[order(d0[,cl]),]
         clusters <- unique(d0[,cl])
@@ -87,7 +69,9 @@ boot_IV <- function(data, Y, D, Z, controls=NULL, FE = NULL, cl = NULL,
     FS.SE <- matrix(fsfit$se, p_iv, 1)
     FS.t <- FS.Coef/FS.SE
     FS.p <- (1 - pnorm(abs(FS.t)))*2
+    rho  <- first_stage_rho(data = d0, D = D, Z = Z, X = controls, FE = FE, weights = weights)
     
+
     #####################################################
     # Bootstrap function
     #####################################################
@@ -102,10 +86,11 @@ boot_IV <- function(data, Y, D, Z, controls=NULL, FE = NULL, cl = NULL,
           smp <- unlist(id.list[match(cluster.boot, clusters)])   # match to locate the position of the clusterin the list
         }
         s <- d0[smp,]
-        # init container vector for results
-        # first 3 cols are OLS and IV coefs, then Reduced Form & First Stage coefs; store two t stats (OLS & IV)
-        ncoef <- (2+2*p_iv)
-        res <- rep(NA, ncoef+2)
+        ## init container vector for results
+        ncoef <- (2+2*p_iv); res <- rep(NA, ncoef+2)
+        # first 3 cols are OLS and IV coefs -- 2
+        # then Reduced Form & First Stage coefs -- p_iv + p_iv
+        # then two t stats (OLS & IV) -- 2
         reg.ols <- OLS(data=s, Y=Y, D=D, X=controls, FE=FE, cl=cl, weights=weights)
         reg.iv <- IV(data=s, Y=Y, D=D, Z=Z, X=controls, FE=FE, cl=cl, weights=weights)
         res[1] <- reg.ols$coef
@@ -176,9 +161,16 @@ boot_IV <- function(data, Y, D, Z, controls=NULL, FE = NULL, cl = NULL,
     # reduced form and 1st stage 
     RF.boot.ci <- t(apply(boot.coefs[, 3:(p_iv+2), drop = FALSE], 2, quantile, CI.lvl))
     FS.boot.ci <- t(apply(boot.coefs[, (3+p_iv):(p_iv*2+2), drop = FALSE], 2, quantile, CI.lvl))
-    # Calculate F
+    # Calculate AR from F
+    F.rf_bootout <- boot.out[, 3:(p_iv+2)] # reduced form
+    AR.stat = c((t(RF.Coef) %*% solve(var(F.rf_bootout)) %*% RF.Coef)/p_iv) # ~ Chi2_{p_iv} / p_iv
+    p.AR = 1 - pchisq(AR.stat * p_iv, df = p_iv)
+    AR <- c(AR.stat, p.AR)
+    names(AR) <- c("Fstat","p.value")
+
+    # Calculate first stage F
     FStat_bootout <- boot.out[, (3+p_iv):(p_iv*2+2)] # first stage
-    F.boot = c((t(fs_coefs0) %*% solve(var(FStat_bootout)) %*% fs_coefs0)/p_iv)
+    F.boot = c((t(FS.Coef) %*% solve(var(FStat_bootout)) %*% FS.Coef)/p_iv)
     names(F.boot) <- "F.boot"
     # timing
     t1 <- Sys.time() - t0
@@ -215,10 +207,10 @@ boot_IV <- function(data, Y, D, Z, controls=NULL, FE = NULL, cl = NULL,
  
     # F.stats
     vcov <- get.vcov(data, D, Y, Z, X=controls, FE=FE, cl=cl, weights=weights)
-    F.standard <- c((t(fs_coefs0) %*% solve(vcov[[1]]) %*% fs_coefs0)/p_iv)
-    F.robust <- c((t(fs_coefs0) %*% solve(vcov[[2]]) %*% fs_coefs0)/p_iv)
+    F.standard <- c((t(FS.Coef) %*% solve(vcov[[1]]) %*% FS.Coef)/p_iv)
+    F.robust <- c((t(FS.Coef) %*% solve(vcov[[2]]) %*% FS.Coef)/p_iv)
     if (is.null(cl)==FALSE) {
-      F.cluster <- c((t(fs_coefs0) %*% solve(vcov[[3]]) %*% fs_coefs0)/p_iv)
+      F.cluster <- c((t(FS.Coef) %*% solve(vcov[[3]]) %*% FS.Coef)/p_iv)
     } else {
       F.cluster <- NA
     }
@@ -276,6 +268,8 @@ boot_IV <- function(data, Y, D, Z, controls=NULL, FE = NULL, cl = NULL,
       F_stat = round(F_stat, prec),
       # tF procedure
       tF.cF = round(tF.cF, prec),
+      # AR test
+      AR = round(AR, prec),
       # number of instruments
       p_iv = p_iv,
       # number of observations
@@ -283,49 +277,6 @@ boot_IV <- function(data, Y, D, Z, controls=NULL, FE = NULL, cl = NULL,
       # number of clusters
       N_cl = ncl
     )
-    # if (sens == FALSE) { # do not publish rho and ratio
-    #   output <- list(
-    #     # OLS and IV results
-    #     est_ols =  round(est_ols, prec),
-    #     est_2sls = round(est_2sls, prec),
-    #     # bootstrap F stat
-    #     F_stat = round(F_stat, prec),
-    #     # number of instruments
-    #     p_iv = p_iv,
-    #     # number of observations
-    #     N = n,
-    #     # number of clusters
-    #     N_cl = ncl
-    #     )
-    # } else {
-    #   thresh_pt_est <- abs(IV.Coef)  * (sig_D/sig_e) * abs(rho)
-    #   if (iv_ci[1] < 0 && iv_ci[2]>0) { # CI cover 0
-    #     thresh_signif <- NA
-    #   } else {
-    #     thresh_signif <- min(abs(iv_ci)) * (sig_D/sig_e) * abs(rho)
-    #   }
-    #   sens_calc = c(thresh_pt_est, thresh_signif, sig_D, sig_e)
-    #   names(sens_calc) <- c("thresh_pt_est", "thresh_signif", "sig_D", "sig_e")
-    #   output <- list(
-    #     # OLS and IV results
-    #     est_ols =  round(est_ols, prec),
-    #     est_2sls = round(est_2sls, prec),
-    #     # bootstrap F stat
-    #     F_stat = round(F_stat, prec),
-    #     # number of instruments
-    #     p_iv = p_iv,
-    #     # number of observations
-    #     N = n,
-    #     # number of clusters
-    #     N_cl = ncl,
-    #     # first stage correlation coefficients
-    #     rho_ZD = round(rho, prec),
-    #     # ratio
-    #     # ratio = round(ratio, prec),
-    #     # sensitivity analysis
-    #     sens_rho_Ze = round(sens_calc, prec)
-    #       )
-    # }
     return(output)
 }
 
