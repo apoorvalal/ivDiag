@@ -16,7 +16,7 @@
 #' @importFrom lfe felm
 #' @importFrom foreach foreach `%dopar%`
 #' @export
-boot_IV <- function(data, Y, D, Z, controls=NULL, FE = NULL, cl = NULL,
+ivDiag <- function(data, Y, D, Z, controls=NULL, FE = NULL, cl = NULL,
     weights = NULL, nboots = 1000, parallel = TRUE, seed = 94305, cores = NULL,
     prec = 4, debug = FALSE) {
    
@@ -231,36 +231,24 @@ boot_IV <- function(data, Y, D, Z, controls=NULL, FE = NULL, cl = NULL,
       }
     }
 
-    # tF procedure (using bootstrapped t and F)
-    if (p_iv == 1) {
-      tF.out <- tF(coef = IV.Coef, se = IV.boot.SE, Fstat = F.boot)
-      tF.cF <- tF.out[2]
-      names(tF.cF) <- NULL  
-    }
-    
-
     # put together (OLS and IV estimates)
     est_ols <- matrix(NA, 3, 6)
     est_ols[1,] <- c(OLS.Coef, OLS.SE, OLS.t, OLS.Coef - 1.96 * OLS.SE, OLS.Coef + 1.96 * OLS.SE, OLS.p)
     est_ols[2,] <- c(OLS.Coef, OLS.boot.SE, OLS.boot.t, OLS.boot.ci, OLS.boot.p)
     est_ols[3,] <- c(OLS.Coef, OLS.SE, OLS.t, OLS.rf.ci, OLS.rf.p)
+    
+    est_2sls <- matrix(NA, 3, 6)
+    est_2sls[1,] <- c(IV.Coef, IV.SE, IV.t, IV.Coef - 1.96 * IV.SE, IV.Coef + 1.96 * IV.SE, IV.p)
+    est_2sls[2,] <- c(IV.Coef, IV.boot.SE, IV.boot.t, IV.boot.ci, IV.boot.p)
+    est_2sls[3,] <- c(IV.Coef, IV.SE, IV.t, IV.rf.ci, IV.rf.p)
+    colnames(est_ols) <-  colnames(est_2sls) <-c("Coef", "SE", "t", "CI 2.5%", "CI 97.5%", "p.value")
+    rownames(est_ols) <- c("Asym", "Boot.c", "Boot.t")
+    rownames(est_2sls) <- c("Asym", "Boot.c",  "Boot.t")
+    
+    # tF procedure (using asymptotic t and robust/cluster F)
     if (p_iv == 1) {
-      est_2sls <- matrix(NA, 4, 6)
-      est_2sls[1,] <- c(IV.Coef, IV.SE, IV.t, IV.Coef - 1.96 * IV.SE, IV.Coef + 1.96 * IV.SE, IV.p)
-      est_2sls[2,] <- c(IV.Coef, IV.boot.SE, IV.boot.t, IV.boot.ci, IV.boot.p)
-      est_2sls[3,] <- c(IV.Coef, IV.SE, IV.t, IV.rf.ci, IV.rf.p)
-      est_2sls[4,] <- c(IV.Coef, IV.boot.SE, IV.boot.t, tF.out[6:8])
-      colnames(est_ols) <-  colnames(est_2sls) <-c("Coef", "SE", "t", "CI 2.5%", "CI 97.5%", "p.value")
-      rownames(est_ols) <- c("Asym", "Boot.c", "Boot.t")
-      rownames(est_2sls) <- c("Asym", "Boot.c",  "Boot.t", "Boot.tF")
-    } else {
-      est_2sls <- matrix(NA, 3, 6)
-      est_2sls[1,] <- c(IV.Coef, IV.SE, IV.t, IV.Coef - 1.96 * IV.SE, IV.Coef + 1.96 * IV.SE, IV.p)
-      est_2sls[2,] <- c(IV.Coef, IV.boot.SE, IV.boot.t, IV.boot.ci, IV.boot.p)
-      est_2sls[3,] <- c(IV.Coef, IV.SE, IV.t, IV.rf.ci, IV.rf.p)
-      colnames(est_ols) <-  colnames(est_2sls) <-c("Coef", "SE", "t", "CI 2.5%", "CI 97.5%", "p.value")
-      rownames(est_ols) <- c("Asym", "Boot.c", "Boot.t")
-      rownames(est_2sls) <- c("Asym", "Boot.c",  "Boot.t")
+      F.tmp <- ifelse(is.na(F.cluster)==TRUE, F.robust, F.cluster)
+      tF.out <- tF(coef = IV.Coef, se = IV.SE, Fstat = F.tmp)
     }
     
     # put together (reduced form and first stage)
@@ -281,7 +269,7 @@ boot_IV <- function(data, Y, D, Z, controls=NULL, FE = NULL, cl = NULL,
         # bootstrap F stat
         F_stat = round(F_stat, prec),
         # tF procedure
-        tF.cF = round(tF.cF, prec),
+        tF.cF = round(tF.out, prec),
         # AR test
         AR = round(AR, prec),
         # number of instruments

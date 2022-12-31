@@ -222,7 +222,7 @@ tF <- function(coef, se, Fstat) {
   ci <- c(coef - cF * se, coef + cF * se)
   p <- (1 - pnorm(abs(tstat)/(cF/1.96))) * 2  # adjusted p value
   out <- c(Fstat, cF, coef, se, tstat, ci, p)
-  names(out) <- c("F", "cF", "Coef", "SE", "t", "CI 2.5%", "CI 97.5%")
+  names(out) <- c("F", "cF", "Coef", "SE", "t", "CI 2.5%", "CI 97.5%","p-value")
   return(out)
 }
 
