@@ -1,6 +1,7 @@
 Package: ivDiag
 Title: Diagnostic tools for Instrumental Variables designs
-Version: 0.0.3
+Version: 0.0.4
+Date: 2023-01-01
 Authors@R:
     c(person(given = "Apoorva", family = "Lal", role = c("aut", "cre"),
            email = "lal.apoorva@gmail.com"),
@@ -14,6 +15,7 @@ Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1
+Depends: R (>= 3.5.0)
 Imports:
     data.table,
     AER,
