@@ -51,12 +51,14 @@ ivDiag <- function(data, Y, D, Z, controls=NULL, FE = NULL, cl = NULL,
     OLS.SE <- olsfit$se
     OLS.t <- OLS.Coef/OLS.SE
     OLS.p <- (1 - pnorm(abs(OLS.t)))*2
+    OLS.df <- olsfit$df
     # 2SLS    
     ivfit <- IV(data = d0, Y=Y, D=D, Z=Z, X=controls, FE=FE, cl=cl, weights=weights)
     IV.Coef <- ivfit$coef
     IV.SE <- ivfit$se
     IV.t <- IV.Coef/IV.SE
     IV.p <- (1 - pnorm(abs(IV.t)))*2
+    IV.df <- ivfit$df
     # reduced form
     rffit <- OLS(data = d0, Y=Y, D=Z, X=controls, FE=FE, cl=cl, weights=weights)
     RF.Coef <- matrix(rffit$coef, p_iv, 1)
@@ -242,14 +244,25 @@ ivDiag <- function(data, Y, D, Z, controls=NULL, FE = NULL, cl = NULL,
     est_2sls[2,] <- c(IV.Coef, IV.boot.SE, IV.boot.t, IV.boot.ci, IV.boot.p)
     est_2sls[3,] <- c(IV.Coef, IV.SE, IV.t, IV.rf.ci, IV.rf.p)
     colnames(est_ols) <-  colnames(est_2sls) <-c("Coef", "SE", "t", "CI 2.5%", "CI 97.5%", "p.value")
-    rownames(est_ols) <- c("Asym", "Boot.c", "Boot.t")
-    rownames(est_2sls) <- c("Asym", "Boot.c",  "Boot.t")
+    rownames(est_ols) <- c("Analytic", "Boot.c", "Boot.t")
+    rownames(est_2sls) <- c("Analytic", "Boot.c",  "Boot.t")
     
-    # tF procedure (using asymptotic t and robust/cluster F)
+    # tF procedure
     if (p_iv == 1) {
+      # using analytic t and robust/cluster F
       F.tmp <- ifelse(is.na(F.cluster)==TRUE, F.robust, F.cluster)
       tF.out <- tF(coef = IV.Coef, se = IV.SE, Fstat = F.tmp)
     }
+    # if (p_iv == 1) {
+    #   # using analytic t and robust/cluster F
+    #   F.tmp <- ifelse(is.na(F.cluster)==TRUE, F.robust, F.cluster)
+    #   tF1 <- tF(coef = IV.Coef, se = IV.SE, Fstat = F.tmp)
+    #   # using bootstrapped t and  F
+    #   tF2 <- tF(coef = IV.Coef, se = IV.boot.SE, Fstat = F.boot)
+    #   tF.out <- rbind(tF1, tF2)
+    #   rownames(tF.out) <- c("w/ analytic SE", "w/ bootstrap SE")
+    # }
+    
     
     # put together (reduced form and first stage)
     est_rf <- cbind(RF.Coef, RF.SE, RF.p, RF.boot.SE, RF.boot.ci, RF.boot.p)
@@ -277,7 +290,9 @@ ivDiag <- function(data, Y, D, Z, controls=NULL, FE = NULL, cl = NULL,
         # number of observations
         N = n,
         # number of clusters
-        N_cl = ncl
+        N_cl = ncl,
+        # degrees of freedom
+        df = IV.df
       )
     } else { # p_iv >1
       output <- list(
@@ -296,7 +311,9 @@ ivDiag <- function(data, Y, D, Z, controls=NULL, FE = NULL, cl = NULL,
         # number of observations
         N = n,
         # number of clusters
-        N_cl = ncl
+        N_cl = ncl,
+        # degrees of freedom
+        df = IV.df
       )
     }    
     return(output)

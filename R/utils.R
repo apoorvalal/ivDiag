@@ -101,8 +101,9 @@ IV <- function(data, D, Y, Z, X=NULL, FE=NULL, cl=NULL, weights=NULL # weights i
   ##Output
   coef <- c(tail(m2$coefficients, n = 1)) # felm IV fits have endog coef at the tail
   se <- c(tail(sqrt(diag(m2$vcv)), n = 1))
-  names(coef) <- names(se) <- NULL
-  return(list(coef = coef, se = se))
+  df <- m2$df.residual
+  names(coef) <- names(se) <- names(df) <- NULL
+  return(list(coef = coef, se = se, df = df))
 }
 
 # %% get robust and clustered F
@@ -151,7 +152,8 @@ OLS <- function(data, Y, D, X=NULL, FE=NULL, cl=NULL, weights=NULL # weights is 
     coef = m1$coefficients[1:p_D]
     se <- sqrt(diag(m1$vcv)[1:p_D])
   }
-  out <- list(coef = coef, se = se)
+  df <- m1$df.residual
+  out <- list(coef = coef, se = se, df = df)
   return(out)
 }
 
@@ -229,7 +231,7 @@ tF <- function(coef, se, Fstat) {
   ci <- c(coef - cF * se, coef + cF * se)
   p <- (1 - pnorm(abs(tstat)/(cF/1.96))) * 2  # adjusted p value
   out <- c(Fstat, cF, coef, se, tstat, ci, p)
-  names(out) <- c("F", "cF", "Coef", "SE", "t", "CI 2.5%", "CI 97.5%","p-value")
+  names(out) <- c("F", "cF", "Coef", "SE", "t", "CI2.5%", "CI97.5%","p-value")
   return(out)
 }
 
