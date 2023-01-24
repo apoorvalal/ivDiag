@@ -2,23 +2,28 @@
 #' @param ivmod fitted felm IV object with residualised Y, D, Z
 #' @param noi noisy, defaults to TRUE
 #' @export
-eff_F_stat = function(ivmod, noi = T){
+eff_F_stat = function(ivmod) {
+  # trace function
+  trace = \(x) sum(diag(x))
+  # first stage model object
   fsmod = ivmod$stage1
-  n_inst = length(fsmod$instruments)
-  # overidentified
-  if(n_inst > 1){
-    if (noi) cat("Pflueger/Montiel-Olea Effective F statistic")
+  scalingFactor = (fsmod$N - fsmod$p) / fsmod$N
+  # instrument
+  Z = fsmod$ivx
+  nZ = length(fsmod$instruments)
+  if (nZ == 1) { # just identified
+    Eff_F = ivmod$stage1$rob.iv1fstat[[1]]['F'] # already computed in felm
+  } else {
+    # variance covariance matrix
+    vcv = fsmod$robustvcv
+    nrV = nrow(vcv)
+    startid = (nrV - nZ + 1)
+    Σ = vcv[startid:nrV, startid:nrV, drop = F]
     # first stage coef and vcov
-    π = fsmod$coefficients
-    Σ = fsmod$robustvcv
-    Z = cbind(1, fsmod$ivx)
+    π = fsmod$coefficients %>% .[startid:nrV]
+    # instrument matrix
     Q_zz = (t(Z) %*% Z)
-    trace = function(x) sum(diag(x))
-    Eff_F = (t(π)  %*% Q_zz  %*% π) / trace(Σ %*% Q_zz)
+    Eff_F = trace(Σ %*% Q_zz) * scalingFactor
   }
-  else{ # just identified
-    if (noi) cat("Kleibergen-Paap F statistic")
-    Eff_F = fsmod$rob.iv1fstat$x['F']
-  }
-  return(as.numeric(Eff_F))
+  return(Eff_F)
 }

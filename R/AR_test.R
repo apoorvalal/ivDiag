@@ -6,19 +6,23 @@
 #' @param Z instrument (string)
 #' @param X control variables (character vector)
 #' @param FE fixed effects (character vector)
+#' @param Cl Cluster name
 #' @param weights weighting vector
 #' @param prec precision of CI in string
+#' @param hetF Use Wald instead of F statistic to account for heteroskedasticity?
 #' @importFrom lfe felm
 #' @export
-AR_test = function(data, Y, D, Z, X, FE, weights = NULL, prec = 3) {
 
+AR_test = function(
+    data, Y, D, Z, X, FE,
+    weights = NULL, Cl = NULL, prec = 3, hetF = FALSE) {
   # keep rows with complete data
   data <- data[, c(Y, D, Z, X, FE, weights)]
   data <- data[complete.cases(data), ]
 
   # fit IV model in FELM to get correct DoFs
   mod = suppressWarnings(
-    felm(formula_lfe(Y = Y, W = D, X = X, Z = Z, D = FE), data = data)
+    felm(formula_lfe(Y = Y, W = D, X = X, Z = Z, D = FE, C = Cl), data = data) %>% robustify()
   )
   # residualise
   Ytil = suppressWarnings(partialer(Y, X = X, FE = FE, data = data, weights = weights))
@@ -41,8 +45,15 @@ AR_test = function(data, Y, D, Z, X, FE, weights = NULL, prec = 3) {
 
   # compute F
   tmp = Ytil - 0 * Dtil # test null of \beta = 0
-  Fstat = c(sum(qr.fitted(ZtilQR, tmp)^2)) /
-    c(sum(tmp^2) - sum(qr.fitted(ZtilQR, tmp)^2)) * (n - k - l) / l
+  # this is homoskedastic
+  Fstat = c(sum(qr.fitted(ZtilQR, tmp)^2)) / c(sum(tmp^2) - sum(qr.fitted(ZtilQR, tmp)^2)) * (n - k - l) / l
+
+  # Replace F with Wald test because of heteroskedasticity
+  if (hetF) {
+    wtype <- if (!(is.null(Cl))) "cluster" else "robust"
+    Fstat = waldtest(mod, "endovars", type = wtype)
+  }
+
   p.value = 1 - pf(Fstat, df1 = l, df2 = n - k - l)
   # CI construction ingredients
   cval = qf(1 - alpha, df1 = l, df2 = n - k - l) * l / (n - k - l)
