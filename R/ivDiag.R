@@ -169,17 +169,12 @@ ivDiag <- function(
   # reduced form and 1st stage
   RF.boot.ci <- t(apply(boot.coefs[, 3:(p_iv + 2), drop = FALSE], 2, quantile, CI.lvl))
   FS.boot.ci <- t(apply(boot.coefs[, (3 + p_iv):(p_iv * 2 + 2), drop = FALSE], 2, quantile, CI.lvl))
-  # Calculate AR from F
-  F.rf_bootout <- boot.out[, 3:(p_iv + 2)] # reduced form
-  AR.stat = c((t(RF.Coef) %*% solve(var(F.rf_bootout)) %*% RF.Coef) / p_iv) # ~ Chi2_{p_iv} / p_iv
-  p.AR = 1 - pchisq(AR.stat * p_iv, df = p_iv)
-  AR <- c(AR.stat, p.AR)
-  names(AR) <- c("Fstat", "p.value")
-
+  
   # Calculate first stage F
   FStat_bootout <- boot.out[, (3 + p_iv):(p_iv * 2 + 2)] # first stage
   F.boot = c((t(FS.Coef) %*% solve(var(FStat_bootout)) %*% FS.Coef) / p_iv)
   names(F.boot) <- "F.boot"
+  
   # timing
   t1 <- Sys.time() - t0
   cat("Bootstrap took", sprintf("%.3f", t1), "sec.\n\n")
@@ -226,6 +221,10 @@ ivDiag <- function(
   F_stat <- c(F.standard, F.robust, F.cluster, F.boot, F.effective)
   names(F_stat) <- c("F.standard", "F.robust", "F.cluster", "F.bootstrap", "F.effective")
   
+  # AR test
+  AR <- AR_test(data=data, Y=Y, D=D, Z=Z, controls=controls, FE =FE, 
+    cl =cl, weights=weights, prec = prec, alpha = 0.05)
+
   # calculate ratio
   if (p_iv == 1) {
     ratio <- rep(NA, 1)
@@ -260,16 +259,7 @@ ivDiag <- function(
     # using analytic t and robust/cluster (effective) F
     tF.out <- tF(coef = IV.Coef, se = IV.SE, Fstat = F.effective)
   }
-  # if (p_iv == 1) {
-  #   # using analytic t and robust/cluster F
-  #   F.tmp <- ifelse(is.na(F.cluster)==TRUE, F.robust, F.cluster)
-  #   tF1 <- tF(coef = IV.Coef, se = IV.SE, Fstat = F.tmp)
-  #   # using bootstrapped t and  F
-  #   tF2 <- tF(coef = IV.Coef, se = IV.boot.SE, Fstat = F.boot)
-  #   tF.out <- rbind(tF1, tF2)
-  #   rownames(tF.out) <- c("w/ analytic SE", "w/ bootstrap SE")
-  # }
-
+ 
 
   # put together (reduced form and first stage)
   est_rf <- cbind(RF.Coef, RF.SE, RF.p, RF.boot.SE, RF.boot.ci, RF.boot.p)
@@ -291,7 +281,7 @@ ivDiag <- function(
       # tF procedure
       tF.cF = round(tF.out, prec),
       # AR test
-      AR = round(AR, prec),
+      AR = AR,
       # number of instruments
       p_iv = p_iv,
       # number of observations
@@ -312,7 +302,7 @@ ivDiag <- function(
       # bootstrap F stat
       F_stat = round(F_stat, prec),
       # AR test
-      AR = round(AR, prec),
+      AR = AR,
       # number of instruments
       p_iv = p_iv,
       # number of observations
