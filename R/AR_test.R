@@ -10,18 +10,30 @@
 #' @param weights weighting vector
 #' @param prec precision of CI in string
 #' @param alpha level of statitical significance
+#' @param parallel parallel computing
+#' @param cores number of cores
 #' @importFrom lfe felm
 #' @export
 
 AR_test = function(data, Y, D, Z, controls, FE = NULL, cl = NULL,
-   weights = NULL, prec = 4, alpha = 0.05 
+   weights = NULL, prec = 4, alpha = 0.05, 
+   parallel = NULL, cores = NULL
    ) {
 
   # keep rows with complete data
   X <- controls
-  data <- data[, c(Y, D, Z, X, FE, weights)]
+  data <- data[, c(Y, D, Z, X, FE, cl, weights)]
   data <- data[complete.cases(data), ]  
   p_iv <- length(Z)
+
+  # parallelising
+  if (is.null(parallel) == TRUE) {
+    if (nrow(data)>5000) {
+      parallel <- TRUE
+    } else {
+      parallel <- FALSE
+    }
+  }
 
   # Run IV regression once
   ivfit <- IV(data = data, Y = Y, D = D, Z = Z, X = X, FE = FE, cl = cl, weights = weights)
@@ -58,18 +70,47 @@ AR_test = function(data, Y, D, Z, controls, FE = NULL, cl = NULL,
   Fstat <- s$F.fstat
 
   # Confidence intervals
-  accept <- rep(NA, ngrid)
-  for (i in 1:ngrid) {
-    d[, Y] <- Ytil - beta_seq[i] * Dtil
-    if (is.null(weights) == TRUE) {
-      m2 = lfe::felm(fmla, data = d)
-    } else {
-      m2 = lfe::felm(fmla, data = d, weights = d[, weights])
+  cat("AR Test Inversion:\n")
+  if (parallel == FALSE) {    
+    accept <- rep(NA, ngrid)
+    for (i in 1:ngrid) {
+      d[, Y] <- Ytil - beta_seq[i] * Dtil
+      if (is.null(weights) == TRUE) {
+        m2 = lfe::felm(fmla, data = d)
+      } else {
+        m2 = lfe::felm(fmla, data = d, weights = d[, weights])
+      }
+      m2 <- robustify(m2)
+      s2 <- summary(m2)
+      accept[i] <- ifelse(s2$pval >= alpha, 1, 0)
     }
-    m2 <- robustify(m2)
-    s2 <- summary(m2)
-    accept[i] <- ifelse(s2$pval >= alpha, 1, 0)    
-  }
+  } else {
+    # parallel computing
+    if (is.null(cores)) {
+      cores <- parallel::detectCores() - 1
+    }
+    cat("Parallelising on ", cores, " cores \n\n", sep = "")
+    # register
+    cl.parallel <- future::makeClusterPSOCK(cores, verbose = FALSE)
+    doParallel::registerDoParallel(cl.parallel)
+    expfun <- c("OLS", "IV", "formula_lfe", "robustify")
+    accept <- foreach(
+      i = 1:ngrid, .combine = c, .inorder = FALSE,
+      .export = expfun,
+      .packages = c("lfe")
+    ) %dopar% {
+      d[, Y] <- Ytil - beta_seq[i] * Dtil
+      if (is.null(weights) == TRUE) {
+        m2 = lfe::felm(fmla, data = d)
+      } else {
+        m2 = lfe::felm(fmla, data = d, weights = d[, weights])
+      }
+      m2 <- robustify(m2)
+      s2 <- summary(m2)
+      return(ifelse(s2$pval >= alpha, 1, 0))
+    }
+    doParallel::stopImplicitCluster()
+  } 
 
   # summarize
   bounded <- FALSE

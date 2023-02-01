@@ -223,7 +223,7 @@ ivDiag <- function(
   
   # AR test
   AR <- AR_test(data=data, Y=Y, D=D, Z=Z, controls=controls, FE =FE, 
-    cl =cl, weights=weights, prec = prec, alpha = 0.05)
+    cl =cl, weights=weights, prec = prec, alpha = 0.05, cores = cores)
 
   # calculate ratio
   if (p_iv == 1) {
