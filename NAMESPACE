@@ -1,7 +1,7 @@
 export(AR_test)
 export(ivDiag)
 export(tF)
-export(eff_F_stat)
+export(eff_F)
 export(first_stage_tests)
 export(formula_lfe)
 export(ltz)

@@ -37,11 +37,11 @@ first_stage_tests <- function(
   # predict Dhat using first stage
   if (!is.null(weights)) {
     dmod = fixest::feols(formula_fixest(D, X = controls, W = Z, D = FE),
-      data = df, weights = df[, weights]
+      data = d0, weights = d0[, weights]
     )
   } else {
     dmod = fixest::feols(formula_fixest(D, X = controls, W = Z, D = FE),
-      data = df
+      data = d0
     )
   }
   if (scatter == TRUE) {

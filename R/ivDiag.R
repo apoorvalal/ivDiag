@@ -222,8 +222,10 @@ ivDiag <- function(
   } else {
     F.cluster <- NA
   }
-  F_stat <- c(F.standard, F.robust, F.cluster, F.boot)
-  names(F_stat) <- c("F.standard", "F.robust", "F.cluster", "F.boot")
+  F.effective <- eff_F(data, D, Y, Z, X = controls, FE = FE, cl = cl, weights = weights)
+  F_stat <- c(F.standard, F.robust, F.cluster, F.boot, F.effective)
+  names(F_stat) <- c("F.standard", "F.robust", "F.cluster", "F.bootstrap", "F.effective")
+  
   # calculate ratio
   if (p_iv == 1) {
     ratio <- rep(NA, 1)
@@ -255,9 +257,8 @@ ivDiag <- function(
 
   # tF procedure
   if (p_iv == 1) {
-    # using analytic t and robust/cluster F
-    F.tmp <- ifelse(is.na(F.cluster) == TRUE, F.robust, F.cluster)
-    tF.out <- tF(coef = IV.Coef, se = IV.SE, Fstat = F.tmp)
+    # using analytic t and robust/cluster (effective) F
+    tF.out <- tF(coef = IV.Coef, se = IV.SE, Fstat = F.effective)
   }
   # if (p_iv == 1) {
   #   # using analytic t and robust/cluster F

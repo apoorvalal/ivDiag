@@ -1,29 +1,40 @@
 #' Computes effective F statistic
-#' @param ivmod fitted felm IV object with residualised Y, D, Z
-#' @param noi noisy, defaults to TRUE
+#' @param data dataframe
+#' @param Y outcome (string)
+#' @param D treatment (string)
+#' @param Z instrument (string)
+#' @param controls control variables (character vector)
+#' @param FE fixed effects (character vector)
+#' @param cl clustering column for SE (character vector)
+#' @param weights weights name (string)
 #' @export
-eff_F_stat = function(ivmod) {
-  # trace function
-  trace = \(x) sum(diag(x))
+eff_F = function(data, D, Y, Z, X = NULL, FE = NULL, cl = NULL, weights = NULL # weights is a string
+  ) {
+  fmla = formula_lfe(Y = Y, W = D, Z = Z, X = X, D = FE, C = cl)
+  if (is.null(weights)) {
+    ivmod = lfe::felm(fmla, data = data)
+  } else {
+    ivmod = lfe::felm(fmla, data = data, weights = data[, weights])
+  }
   # first stage model object
   fsmod = ivmod$stage1
-  scalingFactor = (fsmod$N - fsmod$p) / fsmod$N
   # instrument
   Z = fsmod$ivx
-  nZ = length(fsmod$instruments)
-  if (nZ == 1) { # just identified
-    Eff_F = ivmod$stage1$rob.iv1fstat[[1]]['F'] # already computed in felm
-  } else {
-    # variance covariance matrix
+  p_iv = length(fsmod$instruments)
+  if (is.null(cl) == TRUE) {
     vcv = fsmod$robustvcv
-    nrV = nrow(vcv)
-    startid = (nrV - nZ + 1)
-    Σ = vcv[startid:nrV, startid:nrV, drop = F]
-    # first stage coef and vcov
-    π = fsmod$coefficients %>% .[startid:nrV]
-    # instrument matrix
-    Q_zz = (t(Z) %*% Z)
-    Eff_F = trace(Σ %*% Q_zz) * scalingFactor
+  } else {
+    vcv = fsmod$clustervcv
   }
-  return(Eff_F)
+  # variance covariance matrix
+  p <- nrow(vcv)
+  iv_pos <- (p - p_iv + 1):p
+  # first stage coef and vcov
+  π = matrix(fsmod$coefficients[iv_pos], p_iv, 1)
+  Σ = vcv[iv_pos, iv_pos, drop = FALSE]
+  # instrument matrix
+  Q_zz = (t(Z) %*% Z)
+  eff_F = c(t(π)%*%Q_zz%*%π/sum(diag(Σ %*% Q_zz)))
+  return(eff_F)
 }
+
