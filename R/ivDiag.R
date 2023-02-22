@@ -28,7 +28,7 @@ ivDiag <- function(
   ##############################
   # drop missingness
   data <- data[, c(Y, D, Z, controls, FE, cl, weights)]
-  d0 <- data[complete.cases(data), ]
+  d0 <- as.data.frame(data[complete.cases(data), ])
   n <- nrow(d0); p_iv <- length(Z)
   if (debug) print(c("p_iv :", p_iv))
   ### prep
