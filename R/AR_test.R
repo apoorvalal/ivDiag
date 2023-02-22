@@ -52,9 +52,7 @@ AR_test = function(data, Y, D, Z, controls, FE = NULL, cl = NULL,
   Ztil = matrix(NA, nrow = nrow(data), ncol = p_iv)
   for (i in 1:length(Z)) {
     Ztil[, i] = suppressWarnings(partialer(Z[i], X = X, FE = FE, data = data, weights = weights))
-  }
-  if (p_iv != 1) {Ztil = qr(Ztil)[[1]]}
-
+  }    
   d <- cbind.data.frame(Ytil, Dtil, Ztil, data[, c(cl, weights)])
   colnames(d) <- c(Y, D, Z, cl, weights)
 
