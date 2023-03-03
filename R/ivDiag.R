@@ -25,12 +25,19 @@ ivDiag <- function(
   set.seed(seed)
   ##############################
   # data prep
-  ##############################
+  ##############################  
+  for (var in unique(c(Y, D, Z, controls, FE, cl, weights))) {
+    if (!var %in% names(data)) {
+      stop(paste0("\"", var, "\" is not in the dataset; please double check."))
+    }
+  }
+  
   # drop missingness
-  data <- data[, c(Y, D, Z, controls, FE, cl, weights)]
+  data <- data[, unique(c(Y, D, Z, controls, FE, cl, weights))]
+  data <- haven::zap_labels(data)
   d0 <- as.data.frame(data[complete.cases(data), ])
   n <- nrow(d0); p_iv <- length(Z)
-  if (debug) print(c("p_iv :", p_iv))
+  
   ### prep
   if (is.null(cl) == FALSE) { # find clusters
     d0 <- d0[order(d0[, cl]), ]
@@ -88,17 +95,17 @@ ivDiag <- function(
       smp <- unlist(id.list[match(cluster.boot, clusters)]) # match to locate the position of the clusterin the list
     }
     s <- d0[smp, ]
-    ## init container vector for results
+    ## init container vector for results (4 + 2 * p_iv)
     ncoef <- (2 + 2 * p_iv); res <- rep(NA, ncoef + 2)
-    # first 3 cols are OLS and IV coefs -- 2
+    # first 2 cols are OLS and IV coefs -- 2
     # then Reduced Form & First Stage coefs -- p_iv + p_iv
     # then two t stats (OLS & IV) -- 2
     reg.ols <- OLS(data = s, Y = Y, D = D, X = controls, FE = FE, cl = cl, weights = weights)
     reg.iv <- IV(data = s, Y = Y, D = D, Z = Z, X = controls, FE = FE, cl = cl, weights = weights)
     res[1] <- reg.ols$coef
     res[2] <- reg.iv$coef
-    res[1 + ncoef] <- (reg.ols$coef - OLS.Coef) / reg.ols$se
-    res[2 + ncoef] <- (reg.iv$coef - IV.Coef) / reg.iv$se
+    res[1 + ncoef] <- (reg.ols$coef - OLS.Coef) / reg.ols$se # t stat for ols
+    res[2 + ncoef] <- (reg.iv$coef - IV.Coef) / reg.iv$se # t stat for iv
     # reduced form
     reg.rf <- OLS(data = s, Y = Y, D = Z, X = controls, FE = FE, cl = cl, weights = weights)
     res[3:(2 + p_iv)] <- reg.rf$coef
@@ -107,11 +114,11 @@ ivDiag <- function(
     res[(3 + p_iv):(2 + p_iv * 2)] <- reg.fs$coef
     return(res)
   }
-  # in case there's an error
+  # in case there's an error (need to comment out in debugging)
   one.boot <- function() {
     est <- try(boot.core(), silent = TRUE)
     if ('try-error' %in% class(est)) {
-      est0 <- rep(NA, (4 + 4 * p_iv))
+      est0 <- rep(NA, (4 + 2 * p_iv))
       return(est0)
     } else {
       return(est)
@@ -122,7 +129,7 @@ ivDiag <- function(
   # boot looper - series or parallel
   #####################################################
   if (parallel == FALSE) {
-    boot.out = matrix(NA, nboots, 4 + 4 * p_iv)
+    boot.out = matrix(NA, nboots, 4 + 2 * p_iv)
     for (i in 1:nboots) {
       boot.out[i, ] <- one.boot()
     }
@@ -137,7 +144,7 @@ ivDiag <- function(
     cl.parallel <- future::makeClusterPSOCK(cores, verbose = FALSE)
     doParallel::registerDoParallel(cl.parallel)
     expfun <- c("OLS", "IV", "formula_lfe", "robustify")
-    boot.out <- foreach(
+    boot.out <- foreach::foreach(
       i = 1:nboots, .combine = rbind, .inorder = FALSE,
       .export = expfun,
       .packages = c("lfe")
@@ -149,8 +156,8 @@ ivDiag <- function(
   ##############################
   # post-bootstrap processing
   ##############################
-  if (debug) {
-    return(boot.out)
+  if (debug == TRUE) {
+    print(boot.out)
   }
   # drop NAs
   boot.out <- boot.out[complete.cases(boot.out), ]
@@ -177,7 +184,7 @@ ivDiag <- function(
   
   # timing
   t1 <- Sys.time() - t0
-  cat("Bootstrap took", sprintf("%.3f", t1), "sec.\n\n")
+  cat("Bootstrap took", sprintf("%.3f", t1), "sec.\n")
 
   ##############################
   # prep output
@@ -264,7 +271,7 @@ ivDiag <- function(
   # put together (reduced form and first stage)
   est_rf <- cbind(RF.Coef, RF.SE, RF.p, RF.boot.SE, RF.boot.ci, RF.boot.p)
   est_fs <- cbind(FS.Coef, FS.SE, FS.p, FS.boot.SE, FS.boot.ci, FS.boot.p)
-  colnames(est_rf) <- colnames(est_fs) <- c("Coef", "SE.t", "p.value", "SE.b", "CI.b 2.5%", "CI.b 97.5%", "p.value.b")
+  colnames(est_rf) <- colnames(est_fs) <- c("Coef", "SE", "p.value", "SE.b", "CI.b2.5%", "CI.b97.5%", "p.value.b")
   rownames(est_rf) <- rownames(est_fs) <- Z
 
   # save results
@@ -273,15 +280,17 @@ ivDiag <- function(
       # OLS and IV results
       est_ols = round(est_ols, prec),
       est_2sls = round(est_2sls, prec),
+      # AR test
+      AR = AR,
+      # F stats
+      F_stat = round(F_stat, prec),
+      # first strage rho
+      rho = round(rho, prec),
+      # tF procedure
+      tF.cF = round(tF.out, prec),
       # reduced form and first stage
       est_rf = round(est_rf, prec),
       est_fs = round(est_fs, prec),
-      # bootstrap F stat
-      F_stat = round(F_stat, prec),
-      # tF procedure
-      tF.cF = round(tF.out, prec),
-      # AR test
-      AR = AR,
       # number of instruments
       p_iv = p_iv,
       # number of observations
@@ -289,20 +298,22 @@ ivDiag <- function(
       # number of clusters
       N_cl = ncl,
       # degrees of freedom
-      df = IV.df
+      df = IV.df      
     )
   } else { # p_iv >1
     output <- list(
       # OLS and IV results
       est_ols = round(est_ols, prec),
       est_2sls = round(est_2sls, prec),
+      # AR test
+      AR = AR,
+      # F stats
+      F_stat = round(F_stat, prec),
+      # first strage rho
+      rho = round(rho, prec),
       # reduced form and first stage
       est_rf = round(est_rf, prec),
       est_fs = round(est_fs, prec),
-      # bootstrap F stat
-      F_stat = round(F_stat, prec),
-      # AR test
-      AR = AR,
       # number of instruments
       p_iv = p_iv,
       # number of observations
@@ -310,7 +321,7 @@ ivDiag <- function(
       # number of clusters
       N_cl = ncl,
       # degrees of freedom
-      df = IV.df
+      df = IV.df      
     )
   }
   return(output)

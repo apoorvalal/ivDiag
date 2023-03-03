@@ -57,7 +57,7 @@ AR_test = function(data, Y, D, Z, controls, FE = NULL, cl = NULL,
   colnames(d) <- c(Y, D, Z, cl, weights)
 
   # reduced form
-  fmla = formula_lfe(Y = Y, W = Z, X = NULL, D = NULL, C = cl)
+  fmla = formula_lfe(Y = Y, W = Z, X = NULL, FE = NULL, Cl = cl)
   if (is.null(weights) == TRUE) {
     m1 = lfe::felm(fmla, data = d)
   } else {
@@ -68,7 +68,7 @@ AR_test = function(data, Y, D, Z, controls, FE = NULL, cl = NULL,
   Fstat <- s$F.fstat
 
   # Confidence intervals
-  cat("AR Test Inversion:\n")
+  cat("AR Test Inversion...\n")
   if (parallel == FALSE) {    
     accept <- rep(NA, ngrid)
     for (i in 1:ngrid) {

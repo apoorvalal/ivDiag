@@ -10,7 +10,7 @@
 #' @export
 eff_F = function(data, D, Y, Z, X = NULL, FE = NULL, cl = NULL, weights = NULL # weights is a string
   ) {
-  fmla = formula_lfe(Y = Y, W = D, Z = Z, X = X, D = FE, C = cl)
+  fmla = formula_lfe(Y = Y, W = D, Z = Z, X = X, FE = FE, Cl = cl)
   if (is.null(weights)) {
     ivmod = lfe::felm(fmla, data = data)
   } else {

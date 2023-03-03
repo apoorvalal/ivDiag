@@ -2,15 +2,15 @@
 #' @param y The dependent variable
 #' @param X vector of controls
 #' @param W treatment variable
-#' @param D vector of factor variables to be partialed out
+#' @param FE vector of factor variables to be partialed out
 #' @param Z vector of instruments
-#' @param C vector of variables cluster standard errors (multi-way permitted by LFE)
+#' @param Cl vector of variables cluster standard errors (multi-way permitted by LFE)
 #' @export
-formula_lfe = function(Y, X, W = NULL, D = NULL, Z = NULL, C = NULL) {
+formula_lfe <- function(Y, X, W = NULL, FE = NULL, Z = NULL, Cl = NULL) {
   # 'second stage' step
-  if (!is.null(W) & is.null(Z)) { # separate treatment dummy only
+  if (!is.null(W) & is.null(Z)) { # there is W, but no instrument, such as OLS
     felm_ss = paste(c(Y, paste(c(W, X), collapse = "+")), collapse = "~")
-  } else { # no instrumented variable
+  } else { # either there is Z or there is no W 
     if (!is.null(X)) {
       felm_ss = paste(c(Y, paste(X, collapse = "+")), collapse = "~")
     } else {
@@ -25,15 +25,15 @@ formula_lfe = function(Y, X, W = NULL, D = NULL, Z = NULL, C = NULL) {
   } else { # no instrument
     felm_fs = "0"
   }
-  # FEs
-  if (!is.null(D)) {
-    facs = paste(D, collapse = "+")
+  # FEs (factorial variables)
+  if (!is.null(FE)) {
+    facs = paste(FE, collapse = "+")
   } else {
     facs = "0"
   }
   # clusters
-  if (!is.null(C)) {
-    clusts = paste(C, collapse = "+")
+  if (!is.null(Cl)) {
+    clusts = paste(Cl, collapse = "+")
   } else {
     clusts = "0"
   }
@@ -78,9 +78,9 @@ formula_fixest = function(y, X, W = NULL, D = NULL, Z = NULL) {
 #' @param data Dataframe
 #' @param weights name of the weighting variable
 #' @export
-partialer = function(Y, X, FE = NULL, data, weights = NULL) {
+partialer <- function(Y, X, FE = NULL, data, weights = NULL) {
   # regress variable on controls and FEs and return residuals
-  f = formula_lfe(Y = Y, X = X, D = FE)
+  f = formula_lfe(Y = Y, X = X, FE = FE)
   if (is.null(weights) == TRUE) {
     m <- lfe::felm(f, data)
   } else {
@@ -92,7 +92,7 @@ partialer = function(Y, X, FE = NULL, data, weights = NULL) {
 # %% run IV through FELM
 IV <- function(data, D, Y, Z, X = NULL, FE = NULL, cl = NULL, weights = NULL # weights is a string
 ) {
-  fmla = formula_lfe(Y = Y, W = D, Z = Z, X = X, D = FE, C = cl)
+  fmla = formula_lfe(Y = Y, W = D, Z = Z, X = X, FE = FE, Cl = cl)
   if (is.null(weights)) {
     m2 = robustify(lfe::felm(fmla, data = data))
   } else {
@@ -110,7 +110,7 @@ IV <- function(data, D, Y, Z, X = NULL, FE = NULL, cl = NULL, weights = NULL # w
 get.vcov <- function(data, D, Y, Z, X = NULL, FE = NULL, cl = NULL, weights = NULL # weights is a string
 ) {
   p_iv <- length(Z)
-  fmla = formula_lfe(Y = Y, W = D, Z = Z, X = X, D = FE, C = cl)
+  fmla = formula_lfe(Y = Y, W = D, Z = Z, X = X, FE = FE, Cl = cl)
   if (is.null(weights)) {
     m2 = robustify(lfe::felm(fmla, data = data))
   } else {
@@ -140,7 +140,7 @@ get.vcov <- function(data, D, Y, Z, X = NULL, FE = NULL, cl = NULL, weights = NU
 OLS <- function(data, Y, D, X = NULL, FE = NULL, cl = NULL, weights = NULL # weights is a string
 ) {
   p_D <- length(D)
-  fmla = formula_lfe(Y = Y, W = D, X = X, D = FE, C = cl)
+  fmla = formula_lfe(Y = Y, W = D, X = X, FE = FE, Cl = cl)
   if (is.null(weights) == TRUE) {
     m1 = robustify(lfe::felm(fmla, data = data))
   } else {
@@ -162,7 +162,7 @@ OLS <- function(data, Y, D, X = NULL, FE = NULL, cl = NULL, weights = NULL # wei
 first_stage_coefs <- function(data, D, Z, X, FE = NULL, weights = NULL # weights is a string
 ) {
   p_iv <- length(Z)
-  formula <- formula_lfe(Y = D, W = Z, X = X, D = FE)
+  formula <- formula_lfe(Y = D, W = Z, X = X, FE = FE)
   if (is.null(weights)) {
     reg = robustify(lfe::felm(formula, data = data))
   } else {
@@ -177,25 +177,36 @@ first_stage_coefs <- function(data, D, Z, X, FE = NULL, weights = NULL # weights
   return(coefs)
 }
 
-# %% first stage correlation coefficient for each IV
+# %% first stage correlation coefficient between D and predicted D
 first_stage_rho = function(data, D, Z, X, FE = NULL, weights = NULL # weights is a string
 ) {
   p_iv <- length(Z)
-  rho <- rep(NA, p_iv)
-  if (p_iv > 1) {
-    names(rho) <- Z
-  }
+  # partial out covariates
   res.d <- partialer(Y = D, X = X, FE = FE, data = data, weights = weights)
+  res.z <- matrix(NA, nrow(data), p_iv)
   for (i in 1:p_iv) {
-    res.z <- partialer(Y = Z[i], X = X, FE = FE, data = data, weights = weights)
-    if (is.null(weights) == TRUE) {
-      rho[i] <- cor(res.d, res.z)
-    } else {
-      rho[i] <- wCorr::weightedCorr(x = res.d, y = res.z, weights = data[, weights], method = "Pearson")
-    }
+    res.z[,i] <- partialer(Y = Z[i], X = X, FE = FE, data = data, weights = weights)
   }
+  d0 <- cbind.data.frame(res.d, res.z); colnames(d0) <- c(D, Z)
+  # first stage
+  fmla = formula_lfe(Y = D, W = Z, X = NULL, FE = NULL, Cl = NULL)
+  if (is.null(weights) == TRUE) {
+    m = lfe::felm(fmla, data = d0)
+  } else {
+    m = lfe::felm(fmla, data = d0, weights = data[, weights])
+  } 
+  # rho
+  if (is.null(weights) == TRUE) {
+    rho <- cor(res.d, m$fitted.values, method = c("pearson")) 
+  } else {
+    rho <- wCorr::weightedCorr(x = res.d, y = m$fitted.values, weights = data[, weights], method = "Pearson")
+  }
+  rho <- c(rho)
+  names(rho) <- NULL   
   return(rho)
 }
+
+
 
 # %% # function to replace SE and t-stats of FELM models inplace
 #' @param model FELM fit object
