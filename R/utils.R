@@ -180,6 +180,8 @@ first_stage_coefs <- function(data, D, Z, X, FE = NULL, weights = NULL # weights
 # %% first stage correlation coefficient between D and predicted D
 first_stage_rho = function(data, D, Z, X, FE = NULL, weights = NULL # weights is a string
 ) {
+  data <- data[, unique(c(D, Z, X, FE, weights))]
+  data <- data[complete.cases(data),]
   p_iv <- length(Z)
   # partial out covariates
   res.d <- partialer(Y = D, X = X, FE = FE, data = data, weights = weights)

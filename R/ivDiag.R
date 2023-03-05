@@ -38,11 +38,11 @@ ivDiag <- function(
   d0 <- as.data.frame(data[complete.cases(data), ])
   n <- nrow(d0); p_iv <- length(Z)
   
-  ### prep
+  ### prep (using the first clustering variable in bootstrap)
   if (is.null(cl) == FALSE) { # find clusters
-    d0 <- d0[order(d0[, cl]), ]
-    clusters <- unique(d0[, cl])
-    id.list <- split(1:n, d0[, cl])
+    d0 <- d0[order(d0[, cl[1]]), ]
+    clusters <- unique(d0[, cl[1]])
+    id.list <- split(1:n, d0[, cl[1]])
     ncl <- length(clusters)
   } else {
     ncl <- NULL
