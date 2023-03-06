@@ -4,18 +4,18 @@
 \alias{formula_lfe}
 \title{Stitches together formula for use in felm}
 \usage{
-formula_lfe(Y, X, W = NULL, D = NULL, Z = NULL, C = NULL)
+formula_lfe(Y, X, W = NULL, FE = NULL, Z = NULL, Cl = NULL)
 }
 \arguments{
 \item{X}{vector of controls}
 
 \item{W}{treatment variable}
 
-\item{D}{vector of factor variables to be partialed out}
+\item{FE}{vector of factor variables to be partialed out}
 
 \item{Z}{vector of instruments}
 
-\item{C}{vector of variables cluster standard errors (multi-way permitted by LFE)}
+\item{Cl}{vector of variables cluster standard errors (multi-way permitted by LFE)}
 
 \item{y}{The dependent variable}
 }

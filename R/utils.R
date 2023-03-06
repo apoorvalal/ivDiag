@@ -10,7 +10,7 @@ formula_lfe <- function(Y, X, W = NULL, FE = NULL, Z = NULL, Cl = NULL) {
   # 'second stage' step
   if (!is.null(W) & is.null(Z)) { # there is W, but no instrument, such as OLS
     felm_ss = paste(c(Y, paste(c(W, X), collapse = "+")), collapse = "~")
-  } else { # either there is Z or there is no W 
+  } else { # either there is Z or there is no W
     if (!is.null(X)) {
       felm_ss = paste(c(Y, paste(X, collapse = "+")), collapse = "~")
     } else {
@@ -181,13 +181,13 @@ first_stage_coefs <- function(data, D, Z, X, FE = NULL, weights = NULL # weights
 first_stage_rho = function(data, D, Z, X, FE = NULL, weights = NULL # weights is a string
 ) {
   data <- data[, unique(c(D, Z, X, FE, weights))]
-  data <- data[complete.cases(data),]
+  data <- data[complete.cases(data), ]
   p_iv <- length(Z)
   # partial out covariates
   res.d <- partialer(Y = D, X = X, FE = FE, data = data, weights = weights)
   res.z <- matrix(NA, nrow(data), p_iv)
   for (i in 1:p_iv) {
-    res.z[,i] <- partialer(Y = Z[i], X = X, FE = FE, data = data, weights = weights)
+    res.z[, i] <- partialer(Y = Z[i], X = X, FE = FE, data = data, weights = weights)
   }
   d0 <- cbind.data.frame(res.d, res.z); colnames(d0) <- c(D, Z)
   # first stage
@@ -196,15 +196,15 @@ first_stage_rho = function(data, D, Z, X, FE = NULL, weights = NULL # weights is
     m = lfe::felm(fmla, data = d0)
   } else {
     m = lfe::felm(fmla, data = d0, weights = data[, weights])
-  } 
+  }
   # rho
   if (is.null(weights) == TRUE) {
-    rho <- cor(res.d, m$fitted.values, method = c("pearson")) 
+    rho <- cor(res.d, m$fitted.values, method = c("pearson"))
   } else {
     rho <- wCorr::weightedCorr(x = res.d, y = m$fitted.values, weights = data[, weights], method = "Pearson")
   }
   rho <- c(rho)
-  names(rho) <- NULL   
+  names(rho) <- NULL
   return(rho)
 }
 
@@ -218,4 +218,3 @@ robustify = function(model) {
   model$pval = model$rpval
   return(model)
 }
-

@@ -56,7 +56,7 @@ first_stage_tests <- function(
   # fit first stage and store
   out0 <- first_stage_coefs(data = d0, D = D, Z = Z, X = controls, FE = FE, weights = weights)
   rho <- first_stage_rho(data = d0, D = D, Z = Z, X = controls, FE = FE, weights = weights)
-  AR_res = AR_test(data = d0, Y = Y, D = D, Z = Z, X = controls, FE = FE)
+  AR_res = AR_test(data = d0, Y = Y, D = D, Z = Z, controls = controls, FE = FE)
   fs_coefs0 <- matrix(out0, p_iv, 1)
   if (is.null(cl) == FALSE) { # find clusters
     d0 <- d0[order(d0[, cl]), ]

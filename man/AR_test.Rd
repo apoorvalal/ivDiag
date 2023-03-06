@@ -4,7 +4,20 @@
 \alias{AR_test}
 \title{Weak-IV Robust Anderson Rubin Test}
 \usage{
-AR_test(data, Y, D, Z, X, FE, prec = 3)
+AR_test(
+  data,
+  Y,
+  D,
+  Z,
+  controls,
+  FE = NULL,
+  cl = NULL,
+  weights = NULL,
+  prec = 4,
+  alpha = 0.05,
+  parallel = NULL,
+  cores = NULL
+)
 }
 \arguments{
 \item{data}{dataframe}
@@ -15,11 +28,21 @@ AR_test(data, Y, D, Z, X, FE, prec = 3)
 
 \item{Z}{instrument (string)}
 
-\item{X}{control variables (character vector)}
+\item{controls}{control variables (character vector)}
 
 \item{FE}{fixed effects (character vector)}
 
+\item{cl}{Cluster name}
+
+\item{weights}{weighting vector}
+
 \item{prec}{precision of CI in string}
+
+\item{alpha}{level of statitical significance}
+
+\item{parallel}{parallel computing}
+
+\item{cores}{number of cores}
 }
 \description{
 Weak-IV Robust Anderson Rubin Test

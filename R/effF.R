@@ -9,7 +9,7 @@
 #' @param weights weights name (string)
 #' @export
 eff_F = function(data, D, Y, Z, X = NULL, FE = NULL, cl = NULL, weights = NULL # weights is a string
-  ) {
+) {
   fmla = formula_lfe(Y = Y, W = D, Z = Z, X = X, FE = FE, Cl = cl)
   if (is.null(weights)) {
     ivmod = lfe::felm(fmla, data = data)
@@ -34,7 +34,6 @@ eff_F = function(data, D, Y, Z, X = NULL, FE = NULL, cl = NULL, weights = NULL #
   Σ = vcv[iv_pos, iv_pos, drop = FALSE]
   # instrument matrix
   Q_zz = (t(Z) %*% Z)
-  eff_F = c(t(π)%*%Q_zz%*%π/sum(diag(Σ %*% Q_zz)))
+  eff_F = c(t(π) %*% Q_zz %*% π / sum(diag(Σ %*% Q_zz)))
   return(eff_F)
 }
-

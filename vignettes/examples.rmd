@@ -22,7 +22,7 @@ output:
 
 ```{r, include = F}
 library(knitr); library(ggplot2)
-knitr::opts_chunk$set(echo = T, include = T, warning = F, message = F, cache   = T)
+knitr::opts_chunk$set(echo = T, include = T, warning = F, message = F, cache = T)
 theme_set(theme_minimal())
 ```
 
@@ -43,43 +43,27 @@ This package is a work in progress. Github issues and/or pull requests are welco
 ```{r}
 library(ivDiag); library(ggplot2)
 # %% Meredith (2013) APSR data
-df <-readRDS("../tmp/apsr_Meredith_2013.rds")
+df <- readRDS("../tmp/apsr_Meredith_2013.rds")
 Y <- "DemShareDB"; D <- "DemShareGOV"; Z <- "HomeGOV"
 controls <- c("HomeDB")
 cl <- "fips"
-FE <- c("fips","RaceID")
+FE <- c("fips", "RaceID")
 weights <- "Weight"
 ```
 
-
-## First Stage Testing
-
-```{r}
-# %% first stage F statistics
-fst = first_stage_tests(data=df, Y=Y, D=D, Z=Z, controls=controls, FE =FE,
-  cl=cl, weights=weights, boot = T, nboot = 100)
-fst |> print()
-```
-
-
-## Bootstrap / Block-bootstrap Standard Errors and F Statistic
+## Omnibus function
 
 ```{r}
-bootres=boot_IV(data=df, Y=Y, D=D, Z=Z, controls=controls, FE = FE,
-  cl=cl, weights=weights, nboot = 100)
-bootres |> print()
+(ivd = ivDiag(
+  data = df, Y = Y, D = D, Z = Z,
+  controls = controls, FE = FE,
+  cl = cl,
+  weights = weights,
+  nboot = 100, cores = 10
+))
+
+str(ivd)
 ```
-
-
-### Weak-IV robust Anderson-Rubin test
-
-Fork of `ivmodel::AR.test` that uses `felm` to partial out and fit the
-IV regression instead of `AER` and can fit larger models.
-
-```{r}
-AR_test(df, Y, D, Z, controls, FE) |> print()
-```
-
 
 # Sensitivity Analysis
 
@@ -88,22 +72,28 @@ AR_test(df, Y, D, Z, controls, FE) |> print()
 Example from guiso sapienza & zingales 2016.
 
 ```{r}
-library(ivDiag); library(magrittr); library(patchwork); library(ggfortify); library(lfe)
+library(ivDiag);
+library(magrittr);
+library(patchwork);
+library(ggfortify);
+library(lfe)
 
-source("../R/utils.R")
 load('../tmp/GSZ2016.rds')
 
 # formula
 f = formula_lfe('totassoc_p',
-  X = c('altitudine', 'escursione', 'costal', 'nearsea', 'population', 'pop2', 'gini_land', 'gini_income' ),
-  W = 'libero_comune_allnord', Z = "bishopcity")
+  X = c('altitudine', 'escursione', 'costal', 'nearsea', 'population', 'pop2', 'gini_land', 'gini_income'),
+  W = 'libero_comune_allnord', Z = "bishopcity"
+)
 
 # vanilla clustered fit
 m1 = felm(f, data = gsz_2016, weights = gsz_2016$population) |> robustify()
 
 # bootstrap fit - this can also be done using `boot` with the corresponding ivreg / fixest call
-m2 = felm(f, data = gsz_2016, weights = gsz_2016$population,
-  Nboot = 1000, nostats=structure(FALSE,boot=TRUE))
+m2 = felm(f,
+  data = gsz_2016, weights = gsz_2016$population,
+  Nboot = 1000, nostats = structure(FALSE, boot = TRUE)
+)
 iv_boots = m2$boot["`libero_comune_allnord(fit)`", ]
 ```
 
@@ -123,6 +113,10 @@ These can then be wrapped into a single figure using `patchwork` or `gridExtra`.
 Here, we use `patchwork::wrap_plots` to stack them.
 
 ```{r}
-analytic_est = m1 %>% summary %>% .$coefficients %>% .[nrow(.), ] %>% .[1:2]
+analytic_est = m1 %>%
+  summary %>%
+  .$coefficients %>%
+  .[nrow(.), ] %>%
+  .[1:2]
 viz_iv_dists(analytic_est, iv_boots, ltz_est) %>% wrap_plots(nrow = 3)
 ```

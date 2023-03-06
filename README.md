@@ -13,9 +13,15 @@ library(remotes)
 install_github("apoorvalal/ivDiag")
 ```
 
+The `ivDiag` function performs all the inference diagnostics recommended
+in the paper. The `ltz` and `viz_iv_dists` functions can be used to
+perform sensitivity analysis using local-to-zero asymptotics using a
+substantively motivated zero-first-stage population (see paper for
+details and vignette for example).
+
 ---
 
-### Notes (to self/coauthors) for site maintenance 
+### Notes (to self/coauthors) for site maintenance
 
 Examples are all currently in vignette. If we want examples for each
 documentation entry,

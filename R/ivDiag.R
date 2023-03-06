@@ -1,4 +1,4 @@
-#' bootstrap IV estimator
+#' All IV diagnostics in one
 #' @param data dataframe
 #' @param Y outcome (string)
 #' @param D treatment (string)
@@ -25,19 +25,19 @@ ivDiag <- function(
   set.seed(seed)
   ##############################
   # data prep
-  ##############################  
+  ##############################
   for (var in unique(c(Y, D, Z, controls, FE, cl, weights))) {
     if (!var %in% names(data)) {
       stop(paste0("\"", var, "\" is not in the dataset; please double check."))
     }
   }
-  
+
   # drop missingness
   data <- data[, unique(c(Y, D, Z, controls, FE, cl, weights))]
   data <- haven::zap_labels(data)
   d0 <- as.data.frame(data[complete.cases(data), ])
   n <- nrow(d0); p_iv <- length(Z)
-  
+
   ### prep (using the first clustering variable in bootstrap)
   if (is.null(cl) == FALSE) { # find clusters
     d0 <- d0[order(d0[, cl[1]]), ]
@@ -176,12 +176,12 @@ ivDiag <- function(
   # reduced form and 1st stage
   RF.boot.ci <- t(apply(boot.coefs[, 3:(p_iv + 2), drop = FALSE], 2, quantile, CI.lvl))
   FS.boot.ci <- t(apply(boot.coefs[, (3 + p_iv):(p_iv * 2 + 2), drop = FALSE], 2, quantile, CI.lvl))
-  
+
   # Calculate first stage F
   FStat_bootout <- boot.out[, (3 + p_iv):(p_iv * 2 + 2)] # first stage
   F.boot = c((t(FS.Coef) %*% solve(var(FStat_bootout)) %*% FS.Coef) / p_iv)
   names(F.boot) <- "F.boot"
-  
+
   # timing
   t1 <- Sys.time() - t0
   cat("Bootstrap took", sprintf("%.3f", t1), "sec.\n")
@@ -227,10 +227,12 @@ ivDiag <- function(
   F.effective <- eff_F(data, D, Y, Z, X = controls, FE = FE, cl = cl, weights = weights)
   F_stat <- c(F.standard, F.robust, F.cluster, F.boot, F.effective)
   names(F_stat) <- c("F.standard", "F.robust", "F.cluster", "F.bootstrap", "F.effective")
-  
+
   # AR test
-  AR <- AR_test(data=data, Y=Y, D=D, Z=Z, controls=controls, FE =FE, 
-    cl =cl, weights=weights, prec = prec, alpha = 0.05, cores = cores)
+  AR <- AR_test(
+    data = data, Y = Y, D = D, Z = Z, controls = controls, FE = FE,
+    cl = cl, weights = weights, prec = prec, alpha = 0.05, cores = cores
+  )
 
   # calculate ratio
   if (p_iv == 1) {
@@ -266,7 +268,7 @@ ivDiag <- function(
     # using analytic t and robust/cluster (effective) F
     tF.out <- tF(coef = IV.Coef, se = IV.SE, Fstat = F.effective)
   }
- 
+
 
   # put together (reduced form and first stage)
   est_rf <- cbind(RF.Coef, RF.SE, RF.p, RF.boot.SE, RF.boot.ci, RF.boot.p)
@@ -298,7 +300,7 @@ ivDiag <- function(
       # number of clusters
       N_cl = ncl,
       # degrees of freedom
-      df = IV.df      
+      df = IV.df
     )
   } else { # p_iv >1
     output <- list(
@@ -321,7 +323,7 @@ ivDiag <- function(
       # number of clusters
       N_cl = ncl,
       # degrees of freedom
-      df = IV.df      
+      df = IV.df
     )
   }
   return(output)
