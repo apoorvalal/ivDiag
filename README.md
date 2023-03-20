@@ -20,13 +20,3 @@ substantively motivated zero-first-stage population (see paper for
 details and vignette for example).
 
 ---
-
-### Notes (to self/coauthors) for site maintenance
-
-Examples are all currently in vignette. If we want examples for each
-documentation entry,
-
-+ Add/edit examples in source files in `R/*.R`
-+ Run `./setup.R` to rebuild documentation
-  + (optionally) edit `_pkgdown.yml` and `DESCRPTION` for aesthetics + metadata
-+ Run `./build_site.R` to rebuild site
