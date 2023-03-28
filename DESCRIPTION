@@ -1,6 +1,6 @@
 Package: ivDiag
 Title: Diagnostic tools for Instrumental Variables designs
-Version: 0.1.0
+Version: 1.0.0
 Date: 2023-01-31
 Authors@R:
     c(person(given = "Apoorva", family = "Lal", role = c("aut", "cre"),

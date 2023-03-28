@@ -48,6 +48,15 @@ ivDiag <- function(
     ncl <- NULL
   }
 
+  # IV levels, Treatment levels and Outcome levels
+  nvalues <- matrix(rep(NA, 2 + p_iv), 1, 2 + p_iv)
+  nvalues[, 1] <- length(unique(d0[, Y]))
+  nvalues[, 2] <- length(unique(d0[, D]))
+  for (i in 1:p_iv) {
+    nvalues[, 2 + i] <- length(unique(d0[, Z[i]]))
+  }
+  colnames(nvalues) <- c(Y, D, Z)
+
   #####################################################
   ## point estimates - main data
   #####################################################
@@ -289,7 +298,7 @@ ivDiag <- function(
       # first strage rho
       rho = round(rho, prec),
       # tF procedure
-      tF.cF = round(tF.out, prec),
+      tF = round(tF.out, prec),
       # reduced form and first stage
       est_rf = round(est_rf, prec),
       est_fs = round(est_fs, prec),
@@ -300,7 +309,9 @@ ivDiag <- function(
       # number of clusters
       N_cl = ncl,
       # degrees of freedom
-      df = IV.df
+      df = IV.df,
+      # number of unique values
+      nvalues = nvalues
     )
   } else { # p_iv >1
     output <- list(
@@ -323,7 +334,9 @@ ivDiag <- function(
       # number of clusters
       N_cl = ncl,
       # degrees of freedom
-      df = IV.df
+      df = IV.df,
+      # number of unique values
+      nvalues = nvalues
     )
   }
   return(output)

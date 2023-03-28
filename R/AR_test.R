@@ -112,23 +112,29 @@ AR_test = function(
   # summarize
   bounded <- FALSE
   if (sum(accept) == ngrid) {
-    ci <- "(-Inf, Inf)" # all accepted
+    ci <- c(-Inf, Inf)
+    ci.print <- "(-Inf, Inf)" # all accepted
   } else if (sum(accept) == 0) {
-    ci <- "empty"
+    ci <- NA
+    ci.print <- "empty"
   } else if (accept[1] == 0 && accept[ngrid] == 0) {
     betas <- range(beta_seq[accept == 1])
-    ci <- paste0("[", sprintf(paste0("%.", prec, "f"), betas[1]), ", ", sprintf(paste0("%.", prec, "f"), betas[2]), "]") # bounded interval
+    ci <- betas
+    ci.print <- paste0("[", sprintf(paste0("%.", prec, "f"), betas[1]), ", ", sprintf(paste0("%.", prec, "f"), betas[2]), "]") # bounded interval
     bounded <- TRUE
   } else if (accept[1] == 1 && accept[ngrid] == 1) {
     betas <- range(beta_seq[accept == 0]) # e.g. 1 1 1 1 0 0 0 1 1 1
-    ci <- paste0("(-Inf, ", sprintf(paste0("%.", prec, "f"), betas[1]), "] Union [", sprintf(paste0("%.", prec, "f"), betas[2]), ", Inf)")
+    ci <- c(-Inf, betas[1], betas[2], Inf)
+    ci.print <- paste0("(-Inf, ", sprintf(paste0("%.", prec, "f"), betas[1]), "] Union [", sprintf(paste0("%.", prec, "f"), betas[2]), ", Inf)")
   } else if (accept[1] == 0 && accept[ngrid] == 1) {
     betas <- range(beta_seq[accept == 1]) # e.g. 0 0 0 1 1 1 1 1
-    ci <- paste0("[", sprintf(paste0("%.", prec, "f"), betas[1]), ", Inf)")
+    ci <- c(betas[1], Inf)
+    ci.print <- paste0("[", sprintf(paste0("%.", prec, "f"), betas[1]), ", Inf)")
   } else if (accept[1] == 1 && accept[ngrid] == 0) {
     betas <- range(beta_seq[accept == 1]) # e.g. 1 1 1 1 1 0 0 0
-    ci <- paste0("(-Inf, ", sprintf(paste0("%.", prec, "f"), betas[2]), "]")
+    ci <- c(-Inf, betas[2])
+    ci.print <- paste0("(-Inf, ", sprintf(paste0("%.", prec, "f"), betas[2]), "]")
   }
 
-  return(list(Fstat = round(Fstat, prec), ci = ci, bounded = bounded))
+  return(list(Fstat = round(Fstat, prec), ci.print = ci.print, ci = ci, bounded = bounded))
 }
