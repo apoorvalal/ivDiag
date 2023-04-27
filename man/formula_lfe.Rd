@@ -3,6 +3,7 @@
 \name{formula_lfe}
 \alias{formula_lfe}
 \title{Stitches together formula for use in felm}
+\keyword{internal}
 \usage{
 formula_lfe(Y, X, W = NULL, FE = NULL, Z = NULL, Cl = NULL)
 }

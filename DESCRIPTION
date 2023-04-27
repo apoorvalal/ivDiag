@@ -1,29 +1,30 @@
 Package: ivDiag
-Title: Diagnostic tools for Instrumental Variables designs
-Version: 1.0.0
-Date: 2023-01-31
+Title: Estimation and diagnostic tools for instrumental variables designs
+Version: 1.0.1
+Date: 2023-04-26
 Authors@R:
-    c(person(given = "Apoorva", family = "Lal", role = c("aut", "cre"),
+    c(person(given = "Apoorva", family = "Lal", role = c("aut"),
            email = "lal.apoorva@gmail.com"),
-    person("Yiqing", "Xu", ,"yiqingxu@stanford.edu", role = c("aut"),
+    person("Yiqing", "Xu", ,"yiqingxu@stanford.edu", role = c("aut", "cre"),
           comment = c(ORCID = "0000-0003-2041-6671")))
-Description: Diagnostic tools for IV designs including bootstrap and
-    block-bootstrapped standard errors, F-statistics, and Conley, Hansen,
-    and Rossi (2012) Local-to-zero tests.
-License: MIT
+Maintainer: Yiqing Xu <yiqingxu@stanford.edu>
+Description: Estimation and diagnostic tools for instrumental variables designs, including bootstrapped standard errors, effective F-statistics, Anderson-Rubin test, tF procedure and Conley, Hansen, and Rossi (2012) local-to-zero tests.
+URL: https://yiqingxu.org/packages/ivDiag/
+License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.3
 Depends: R (>= 3.5.0)
 Imports:
-    data.table,
-    AER,
     foreach,
-    parallel,
-    doParallel,
+    future,
     lfe,
     fixest,
     ggplot2,
     wCorr,
-    ggfortify
+    ggfortify,
+    haven,
+    glue,
+    patchwork
+

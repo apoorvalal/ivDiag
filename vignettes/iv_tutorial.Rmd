@@ -1,0 +1,322 @@
+---
+title: 'Tutorial for ivDiag'
+output:
+  rmarkdown::html_vignette:
+    toc: false
+    toc_depth: 4
+    number_sections: false
+bibliography: references.bib      
+vignette: >
+  %\VignetteIndexEntry{Tutorial}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}  
+---
+<!-- 
+  Code to Justify Text
+    <style>
+    body {
+    text-align: justify}
+    </style>
+-->   
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  cache = TRUE,
+  fig.width = 7,
+  fig.height = 5.5,
+  comment = "#>"
+)
+```  
+
+
+The **ivDiag** package is a tool we create for researchers to conduct estimation, inference, sensitivity analysis, and visualization with instrumental variable (IV) designs. It provides **R** implementations of the guidelines proposed in @lal2023trust, enabling researchers to obtain reliable and robust estimates of their IV models.
+
+The package includes a range of functions to compute various standard errors (SEs), multiple types of *F*-statistics, and weak-IV robust confidence intervals (CIs). These features ensure that researchers can accurately capture the uncertainty associated with their IV estimates and make valid statistical inferences.
+
+The package also integrates the Anderson-Rubin (AR) test and adjusted *t*-ratio inference from @lee2022valid, enhancing the validity and reliability of the package's statistical inference capabilities.
+
+Moreover, **ivDiag** offers the Local-to-Zero (LTZ) estimator [@conley2012plausibly], which allows for more precise estimation of the causal effect of interest. Additionally, the package provides functions to plot coefficients of two-stage least squares (2SLS) and ordinary least squares (OLS) regressions, enabling researchers to visually compare the differences between these two estimators and various inferential methods.
+
+The estimation routines in the omnibous function `ivDiag` return a list that can be sliced and appended to additional rows in tables produced by `modelsummary`, `fixest::etable`, and stargazer, among other tools. This makes it easy for researchers to integrate `ivDiag` estimates into their existing workflows.
+
+Note that **ivDiag** is applicable for the **one-treatment** case only, although there can be multiple instruments. 
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE,cache=TRUE)
+knitr::opts_chunk$set(fig.width=7, fig.height=6, out.width = '70%', fig.align = "center") 
+rm(list=ls())
+knitr::write_bib("references.bib")
+```
+
+**ivDiag** ships three datasets for illustration purposes: `rueda`, `gsz` and `gsz_south`. `rueda` is based on @rueda2017, while the other two are based on @guiso2016long. 
+```{r}
+library(ivDiag)
+data(ivDiag)
+ls()
+```
+
+
+# Estimation and Inference
+
+We use @rueda2017 to illustrate `ivDiag`'s estimation and inference functionalities. The author studies the persistence of vote buying in developing democracies despite the use of secret ballots and argues that brokers condition future payments on published electoral results to enforce these transactions and that this is effective only when the results of small voting groups are available. 
+
+The study examines the relationship between polling station size and vote buying using three different measures of the incidence of vote buying, two at the municipality level and one at the individual level. The paper also considers other factors such as poverty and lack of education as potential explanations for why vote buying persists despite secret ballots.
+
+The size of the polling station, predicted by the rules limiting the number of voters per polling station, is used as an instrument of the actual polling place size. The institutional rule predicts sharp reductions in the size of the average polling station of a municipality every time the number of registered voters reaches a multiple of the maximum number of voters allowed to vote in a polling station. Such sharp reductions are used as a source of exogenous variation in polling place size to estimate the causal effect of this variable on vote buying.
+
+| Summary | |
+|----------------|-----------------------|
+| Unit of analysis | city |
+| Treatment | the actual polling place size |
+| Instrument | the predicted size of the polling station |
+| Outcome | citizens' reports of electoral manipulation |
+| Model | Table5(1)|
+
+## Visualizing the first stage
+
+```{r rueda2017_vis}
+Y <- "e_vote_buying" # Y: outcome of interest
+D <-"lm_pob_mesa" # D: endogenous treatment
+Z <- "lz_pob_mesa_f" # Z: instrumental variable
+controls <- c("lpopulation", "lpotencial") # covariates of control variables
+cl <- "muni_code" # clusters
+weights <- FE <- NULL # no weights or fixed effects
+
+# first stage (raw)
+par(mar = c(4, 4, 2, 2))
+plot(rueda$lz_pob_mesa_f, rueda$lm_pob_mesa, col = "#777777", cex = 0.5, 
+     main = "Raw Data", xlab = "Instrument", ylab = "Treatment")
+abline(lm(lm_pob_mesa ~ lz_pob_mesa_f, data = rueda), col = 2, lwd = 2, lty = 2)
+
+# first stage (partial out)
+z_res <- lm(lz_pob_mesa_f ~ lpopulation + lpotencial, data = rueda)$residuals
+d_res <- lm(lm_pob_mesa ~ lpopulation + lpotencial, data = rueda)$residuals
+plot(z_res, d_res, col = "#777777", cex = 0.5, main = "Covariates Partialled Out", 
+     xlab = "Residualized Instrument", ylab = "Residualized Treatment")
+abline(lm(d_res ~ z_res), col = 2, lwd = 2, lty = 2)
+```
+
+## Omnibus function
+
+The omnibus function `ivDiag` conducts both OLS and 2SLS estimation and quantify uncertainties using multiple inferential methods. It also output relevant information such as the first-stage *F*-statistics and results from the AR test. 
+
+```{r rueda2017_est}
+library(ivDiag)
+g <- ivDiag(data = rueda, Y=Y, D = D, Z = Z, controls = controls, cl = cl)
+names(g)
+```
+
+### OLS estimation and inferential results
+
+`est_ols` stores OLS results from the linear model `felm(Y ~ D + controls | 0 | FE, data = df, weights = weights, cluster = cl)`, along with inferetial resutls based on analytic SEs and two (block-)bootstrap methods: the coefficient method (bootstrap-c) and t-ratio method (bootstrap-t). 
+```{r}
+g$est_ols
+```
+
+### 2SLS estimation and inferential resutls
+
+`est_2sls` stores 2SLS results using the **felm** package, along with analytic SEs and two bootstrapped SEs.
+```{r}
+g$est_2sls
+```
+
+
+Two additional inferential methods are provided. `AR` stores results from the AR test, including the test statistic, the p-value, the 95% CI using the inversion method, and whether the CI is bounded. Note that if a CI is empty, we define `AR$bounded = FALSE`.
+```{r}
+g$AR
+```
+
+`tF` stores results from the *tF* procedure based on @lee2022valid. `tF$cF` is the critical value for the valid *t* test adjusted based on the effective *F* statistic. The CIs are constructed based on `tF$t`, `tF$SE`, and `tF$cF`. 
+```{r}
+g$tF
+```
+
+
+### Charaterizing the first stage
+
+`F_stat` stores various first-stage partial *F*-statistics, which assess the strength of the instruments. They include *F* statistic based classic analytic SEs, robust SEs, cluster-robust SEs (if `cl` is supplied), (blocked-)bootstrapped F statistic, and the effective F statistic [@olea2013robust]. 
+```{r}
+g$F_stat
+```
+
+`rho` stores the Pearson correlation coefficient between the treatment and predicted treatment from the first stage regression (all covariates are partialled out). 
+```{r}
+g$rho
+```
+
+`est_fs` stores results from the first stage regression. Both analytic and (block-)bootstrap SEs are recorded (boostrap-c). The CIs are based on the bootstrap percentile method.
+```{r}
+g$est_fs
+```
+
+### Other relevant information
+
+`est_rf` stores results from the reduced form regression. SEs and CIs are produced similarly as in `est_fs`.
+```{r}
+g$est_rf
+```
+
+`p_iv` stores the number of instruments. `N` and `N_cl` store the number of observations and the number of clusters used in the OLS and 2SLS regression, respectively. `df` stores the degree of freedom left from the 2SLS regression. The `nvalues` stores the unique values the outcome `Y`, the treatment `D`, and the instrument(s) `Z` in the 2SLS regression.
+```{r}
+g$p_iv
+g$N
+g$N_cl
+g$df
+g$nvalues
+```
+
+## Coefficients and CIs plot
+
+The `plot_coef()` function produces a coefficient plot for both OLS and 2SLS estimates using different inferential methods. It also shows the effective *F*-statistic, as well as the numbers of observations and clusters. This plot is made by base `R` and can be further altered by users. 
+```{r}
+plot_coef(g)
+```
+
+In this example, the 2SLS estimate is slightly larger in magnitude than the OLS estimate. Various inferential methods of the OLS (or 2SLS) estimate, as shown by the multiple CIs, more of less agree with each other, suggesting robustness of the findings. 
+
+## Conduct tests seperately
+
+The **ivDiag** package also allows users to conduct several important statistical tests seperately, including the effective *F* statistic, the AR test, and the *tF* procedure. The syntax of `eff_F` and `AR_test` are similar to that of `ivDiag`. 
+
+### Effective *F* statistic
+
+```{r}
+eff_F(data = rueda, Y = Y, D = D, Z = Z, controls = controls, cl = cl, 
+      FE = NULL, weights = NULL)
+```
+
+### AR test
+
+```{r rueda_AR}
+AR_test(data = rueda, Y=Y, D = D, Z = Z, controls = controls, cl = cl, 
+        FE = NULL, weights = NULL)
+```
+
+### *tF* procedure
+
+`tF` takes in a 2SLS estimate, its SE (analytic or bootstrapped), and the first-stage *F* statistics (obtain from any methods).
+```{r}
+tF(coef = -0.9835, se = 0.1540, Fstat = 8598)
+```
+
+---
+
+
+# Sensitivity Tests
+
+We also implement a set of sensitivity tests for researchers to gauge the validity of the exogeneity assumption, which is strong and generally untestable. Theses tests are applicable for the **just-identified** (one-treatment-one-instrument) case. 
+
+
+@bound2000compulsory suggest first using an auxiliary regression on a subsample where the instrument is not expected to influence treatment assignment, known as **zero-first-stage** (ZFS) tests. A ZFS test can be understood as a placebo test. The primary intuition is that in a subsample that one has a strong prior that the first stage is zero—-hence, they are never takers, to use the language of the LATE framework—the reduced form effect should also be zero if the assumption is satisfied. In other words, motivated by a substantive prior that the first-stage effect of the instrument is likely zero for a subsample of the population (henceforth, the ZFS subsample), the researcher then proceeds to show that the reduced-form coefficient for the instrument (by regression $Y$ on $Z$) is approximately zero in the ZFS subsample, which is suggestive evidence in favor of instrument validity. Most observational instruments ought to yield some ZFS subsample based on substantive knowledge of the assignment mechanism.
+
+While this is a useful heuristic check that we advise most observational IV papers adopt, it is an informal test and provides no test statistics. @van2018beyond demonstrate that the ZFS test can be fruitfully combined with the "plausibly exogenous" method suggested by @conley2012plausibly (henceforth, CHR 2012). To illustrate the method, we first rewrite the IV simultaneous equations in CHR (2012)’s notation:
+
+
+$$
+Y=X \beta+Z \gamma+\varepsilon ; \quad X=Z \Pi+v
+$$
+
+where the instrument $Z$ also enters the structural equation, the exclusion restriction amounts to a dogmatic prior that $\gamma=0$. CHR (2012) suggest that this assumption can be relaxed, and replaced with a user-specified assumption on a plausible value, range, or distribution for $\gamma$ depending on the researcher’s beliefs regarding the degree of exclusion restriction violation. They propose three different approaches for inference that involve specifying the range of values for $\gamma$, a prior distributional assumption for $\gamma$, and a fully Bayesian analysis that requires priors over all model parameters and corresponding parametric distributions. We focus on the second method, which CHR (2012) call the **local-to-zero** (LTZ) approximation because of its simplicity and transparency. The LTZ approximation considers "local" violations of the exclusion restriction and requires a prior over $\gamma$ alone. CHR (2012) show that replacing the standard assumption that $\gamma = 0$ with the
+weaker assumption that $\gamma
+\sim \mathbb{F}$, a prior distribution, implies distribution for $\hat\beta$ below:
+$$
+\hat{\beta} \sim^a N(\beta, \mathbb{V}_{2SLS}) + A \gamma
+$$
+where $A = X' Z (Z 'Z)^{-1} Z' X)^{-1} X'Z$ and the original 2SLS asymptotic distribution is inflated by the additional term. The distribution takes its most convenient form when one uses a Gaussian prior over $\gamma \sim N(\mu_\gamma, \Omega_\gamma)$, which simplifies the above equation to the equation below, with a posterior being a Gaussian centered at $\beta + A \mu_\gamma$.
+$$
+\hat{\beta} \sim^a N(\beta + A \mu_\gamma ,
+  \mathbb{V}_{2SLS} + A \Omega A')
+$$
+In practice, researchers can replace $\mu_\gamma$ with an estimate from the ZFS and $\Omega$ with the estimate's estimated variance. 
+
+## The persistence of social captial
+
+We illustrate the diagnostics by applying it to the IV analysis in @guiso2016long (henceforth GSZ 2016), who revisit @putnam1992making's celebrated conjecture that Italian cities that achieved self-government in the Middle Ages have higher modern-day levels of social capital. More specifically, they study the effects of free city-state status on social capital as measured by the number of nonprofit organizations and organ donations per capita, and a measure of whether students cheat in mathematics. Below is a summary. In this tutorial, we focus on the first outcome.
+
+| Summary  | |
+|---------|-----------------------|
+| Unit of analysis | Italian city |
+| Treatment | historical free city status |
+| Instrument | whether a city was the seat of a bishop in the Middle Ages |
+| Outcome | the number of nonprofit organizations per capita |
+| Model | Table 6 |
+
+
+Using the replication data, we first locate the key variables and take a look at the data. The outcome variable is highly skewed, but we keep it as is to be consistent with the original paper. 
+```{r}
+Y <- "totassoc_p"
+D <- "libero_comune_allnord"
+Z <- "bishopcity"
+weights <- "population"
+controls <- c('altitudine', 'escursione', 'costal', 'nearsea', 'population', 'pop2', 'gini_land', 'gini_income')
+
+# table instrument and treatment
+table(gsz$bishopcity)
+table(gsz$libero_comune_allnord)
+table(gsz$bishopcity, gsz$libero_comune_allnord)
+
+# distribution of the outcome
+hist(gsz$totassoc_p, breaks = 100, xlab = "#Nonprofit Organizations Per Capita")
+```
+
+We apply omnibus function `ivDiag` and plot the OLS and 2SLS coefficients and corresponding CIs.
+```{r gsz2016_est}
+g <- ivDiag(data = gsz, Y = Y, D = D, Z = Z, controls = controls, weights = weights)
+g
+```
+
+The results show that the 2SLS estimates are larger in magnitude than the OLS estimates. Different inferential methods for the 2SLS estimates produce slightly different CIs, but all reject the null of no effect quite comfortably. 
+```{r}
+plot_coef(g)
+```
+
+
+## ZFS tests and LTZ adjustment
+
+The authors conduct a ZFS test using the subsample of southern Italian cities, where the free-city experience was argubly irrelevant. The ZFS test is simply a reduced-form regression of the outcome on the instrument. The coefficient and SE of the instrument `bishopcity` is `0.178` and `0.137`, respectively.
+```{r}
+library(estimatr)
+zfs <- lm_robust(totassoc_p ~ bishopcity + altitudine + escursione + costal + nearsea + 
+          population + pop2 + gini_land + gini_income + capoluogo, data = gsz_south, 
+          weights = gsz_south$population, se_type = "HC1")
+
+summary(zfs)$coefficients["bishopcity", 1:2]
+```
+
+Using `0.178` as $\mu_\gamma$ and `0.137^2` as $\Omega$, we can perform a LTZ adjustment on the full sample. 
+```{r}
+ltz_est <- ltz(data = gsz, Y = Y, D = D, Z = Z, controls = controls, weights = weights, 
+              mu = 0.178, Sig = 0.137^2)
+ltz_est
+```
+
+`viz_iv_dists` is a function that visualizes the approximated sampling distribution of the 2SLS estimates using three different method. The main inputs are (1) the output from the omnibus function `ivDiag` and (2) the output from `ltz`. The dotted lines represent the 95% CIs. We see that, in this case, the original finding remains robust to bootstrapped uncertainties measures and the LTZ adjustment. 
+```{r message = FALSE, warning = FALSE}
+viz_iv_dists(g, ltz_est, xlim = c(-0.5, 7)) 
+```
+
+
+---
+ 
+# References {-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

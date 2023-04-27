@@ -3,6 +3,7 @@
 \name{formula_fixest}
 \alias{formula_fixest}
 \title{Stitches together formula for use in fixest}
+\keyword{internal}
 \usage{
 formula_fixest(y, X, W = NULL, D = NULL, Z = NULL)
 }

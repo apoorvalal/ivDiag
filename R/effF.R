@@ -8,9 +8,9 @@
 #' @param cl clustering column for SE (character vector)
 #' @param weights weights name (string)
 #' @export
-eff_F = function(data, D, Y, Z, X = NULL, FE = NULL, cl = NULL, weights = NULL # weights is a string
+eff_F = function(data, Y, D, Z, controls = NULL, FE = NULL, cl = NULL, weights = NULL # weights is a string
 ) {
-  fmla = formula_lfe(Y = Y, W = D, Z = Z, X = X, FE = FE, Cl = cl)
+  fmla = formula_lfe(Y = Y, W = D, Z = Z, X = controls, FE = FE, Cl = cl)
   if (is.null(weights)) {
     ivmod = lfe::felm(fmla, data = data)
   } else {
@@ -30,10 +30,10 @@ eff_F = function(data, D, Y, Z, X = NULL, FE = NULL, cl = NULL, weights = NULL #
   p <- nrow(vcv)
   iv_pos <- (p - p_iv + 1):p
   # first stage coef and vcov
-  π = matrix(fsmod$coefficients[iv_pos], p_iv, 1)
-  Σ = vcv[iv_pos, iv_pos, drop = FALSE]
+  pi = matrix(fsmod$coefficients[iv_pos], p_iv, 1)
+  Sigma = vcv[iv_pos, iv_pos, drop = FALSE]
   # instrument matrix
   Q_zz = (t(Z) %*% Z)
-  eff_F = c(t(π) %*% Q_zz %*% π / sum(diag(Σ %*% Q_zz)))
+  eff_F = c(t(pi) %*% Q_zz %*% pi / sum(diag(Sigma %*% Q_zz)))
   return(eff_F)
 }

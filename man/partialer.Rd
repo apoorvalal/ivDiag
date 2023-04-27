@@ -3,6 +3,7 @@
 \name{partialer}
 \alias{partialer}
 \title{partial out controls and covariates from y}
+\keyword{internal}
 \usage{
 partialer(Y, X, FE = NULL, data, weights = NULL)
 }

@@ -11,12 +11,17 @@
 plot_coef <- function(out, 
   ols.methods = c("analy","bootc","boott"),
   iv.methods = c("analy","bootc","boott","ar","tf"),
-  main = "OLS and 2SLS Estimates with 95% CIs",
+  main = NULL,
   ylab = "Coefficient",
   grid = TRUE,
   stats = TRUE,
   ylim = NULL
 ) {
+
+  # title
+  if (is.null(main)==TRUE) {
+    main <- "OLS and 2SLS Estimates with 95% CIs"
+  }
 
   # stats
   for (s in ols.methods) {

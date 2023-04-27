@@ -18,7 +18,7 @@
 #' @export
 ivDiag <- function(
     data, Y, D, Z, controls = NULL, FE = NULL, cl = NULL,
-    weights = NULL, nboots = 1000, parallel = TRUE, seed = 94305, cores = NULL,
+    weights = NULL, nboots = 1000, parallel = TRUE, cores = NULL, seed = 94305, 
     prec = 4, debug = FALSE) {
   ## Bootstrap OLS and IV SE/CI + F Stat for a single-instrument, single-treatment setting
   t0 <- Sys.time()
@@ -233,7 +233,7 @@ ivDiag <- function(
   } else {
     F.cluster <- NA
   }
-  F.effective <- eff_F(data, D, Y, Z, X = controls, FE = FE, cl = cl, weights = weights)
+  F.effective <- eff_F(data, Y = Y, D = D, Z = Z, controls = controls, FE = FE, cl = cl, weights = weights)
   F_stat <- c(F.standard, F.robust, F.cluster, F.boot, F.effective)
   names(F_stat) <- c("F.standard", "F.robust", "F.cluster", "F.bootstrap", "F.effective")
 

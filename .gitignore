@@ -1,1 +1,42 @@
-vignettes/examples_cache/*
+# History files
+.Rhistory
+.Rapp.history
+.Ruserdata
+
+# Session Data files
+.Data
+
+# Example code in package build process
+*-Ex.R
+
+# Output files from R CMD build
+/*.tar.gz
+
+# Output files from R CMD check
+/*.Rcheck/
+
+# RStudio files
+.Rproj.user/
+
+# produced vignettes
+vignettes/*.html
+vignettes/*.pdf
+vignettes/iv_tutorial_cache
+vignettes/iv_tutorial_files
+
+
+# knitr and R markdown default cache directories
+/*_cache/
+/cache/
+
+# Temporary files created by R markdown
+*.utf8.md
+*.knit.md
+.DS_Store
+
+docs
+
+
+man/.DS_Store
+.DS_Store
+
