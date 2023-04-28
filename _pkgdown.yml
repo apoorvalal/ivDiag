@@ -31,7 +31,7 @@ footer:
     right: package
 
 reference:
-  - title: Estimation and Tests
+  - title: Estimation and Diagnostics
   - contents:
     - ivDiag
     - eff_F
@@ -41,7 +41,7 @@ reference:
   - title: Visualization Tools
   - contents:
     - plot_coef
-    - viz_iv_dists
+    - plot_ltz
   - title: Datasets
   - contents:
     - rueda
@@ -49,7 +49,7 @@ reference:
     - gsz_south
 
 authors:
-  Apoorval Lal:
+  Apoorva Lal:
     href: "https://apoorvalal.github.io/"
   Yiqing Xu:
     href: "https://yiqingxu.org/"

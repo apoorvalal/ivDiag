@@ -240,7 +240,8 @@ ivDiag <- function(
   # AR test
   AR <- AR_test(
     data = data, Y = Y, D = D, Z = Z, controls = controls, FE = FE,
-    cl = cl, weights = weights, prec = prec, alpha = 0.05, cores = cores
+    cl = cl, weights = weights, prec = prec, alpha = 0.05, 
+    parallel = parallel, cores = cores
   )
 
   # calculate ratio
@@ -339,6 +340,7 @@ ivDiag <- function(
       nvalues = nvalues
     )
   }
+  class(output) <- "ivDiag"
   return(output)
 }
 

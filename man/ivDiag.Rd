@@ -1,43 +1,67 @@
+\docType{package}
 \name{ivDiag}
 \alias{ivDiag}
-\title{Omnibus function to conduct IV estimation and diagnostics}
+\title{Omnibus Function for IV Estimation and Diagnostics}
+\description{Conducts various estimation and diagnostic procedure for instrumental variable designs in one shot.}
 \usage{
-ivDiag(
-  data,
-  Y,
-  D,
-  Z,
-  controls = NULL,
-  FE = NULL,
-  cl = NULL,
-  weights = NULL,
-  nboots = 1000,
-  parallel = TRUE,
-  cores = NULL,
-  seed = 94305,
-  prec = 4,
-  debug = FALSE
-)
+ivDiag(data, Y, D, Z, controls = NULL, FE = NULL, cl = NULL, weights = NULL,
+  nboots = 1000, parallel = TRUE, cores = NULL, 
+  seed = 94305, prec = 4, debug = FALSE)
 }
 \arguments{
-\item{data}{name of a dataframe.}
-\item{Y}{a string indicating the outcome variable.}
-\item{D}{a string indicating the treatment variable.}
-\item{Z}{a vector of strings indicating the instrumental variables.}
-\item{controls}{a vector of strings indicating the control variables.}
-\item{FE}{a vector of strings indicating the fixed effects variables.}
-\item{cl}{a string indicating the clustering variable.}
-\item{weights}{a string indicating the variable that stores weights.}
-\item{nboots}{a numeric value indicating the number of bootstrap runs.}
-\item{parallel}{a logical flag controlling parallel computing.}
-\item{cores}{setting the number of cores.}
-\item{prec}{precision of CI in string; the default is 4.}
-\item{seed}{set seed.}
-\item{debug}{for debugging purposes.}
+  \item{data}{name of a dataframe.}
+  \item{Y}{a string indicating the outcome variable.}
+  \item{D}{a string indicating the treatment variable.}
+  \item{Z}{a vector of strings indicating the instrumental variables.}
+  \item{controls}{a vector of strings indicating the control variables.}
+  \item{FE}{a vector of strings indicating the fixed effects variables.}
+  \item{cl}{a string indicating the clustering variable.}
+  \item{weights}{a string indicating the variable that stores weights.}
+  \item{nboots}{a numeric value indicating the number of bootstrap runs.}
+  \item{parallel}{a logical flag controlling parallel computing.}
+  \item{cores}{setting the number of cores.}
+  \item{prec}{precision of CI in string; the default is 4.}
+  \item{seed}{setting seed.}
+  \item{debug}{for debugging purposes.}
 }
 \value{
-list of results
+  \item{est_ols}{results from an OLS regression.}
+  \item{est_2sls}{results from a 2SLS regression.}
+  \item{AR}{results from an Anderson-Rubin test}
+  \item{F_stat}{various F statistics.}
+  \item{rho}{Pearson correlation coefficient between the treatment and predicted treatment from the first stage regression (all covariates are partialled out).}
+  \item{tF}{results from the tF procedure based on Lee et al. (2022)}
+  \item{est_rf}{results from the first stage regression.}
+  \item{est_fs}{results from the reduced form regression.}
+  \item{p_iv}{the number of instruments.}
+  \item{N}{the number of observations.}
+  \item{N_cl}{ the number of clusters.}
+  \item{df}{the degree of freedom left from the 2SLS regression}
+  \item{nvalues}{the unique values the outcome Y, the treatment D, and each instrument in Z in the 2SLS regression.}
 }
-\description{
-Conduct various estimation and diagnostic procedure for IV designs in one shot.
+\author{
+  Apoorva Lal; Yiqing Xu
 }
+\references{
+Lal, Apoorva, Mackenzie William Lockhart, Yiqing Xu, and Ziwen Zu. 2023. "How Much Should We Trust Instrumental Variable Estimates in Political Science? Practical Advice Based on 67 Replicated Studies." Available at: \url{https://yiqingxu.org/papers/english/2021_iv/LLXZ.pdf}
+
+Lee, David S, Justin McCrary, Marcelo J Moreira, and Jack Porter. 2022. "Valid t-Ratio Inference for IV." American Economic Review 112 (10): 3260–90.
+}
+\seealso{
+  \code{\link{plot_coef}}
+}
+\examples{
+library(ivDiag)
+data(ivDiag)
+Y <- "totassoc_p"
+D <- "libero_comune_allnord"
+Z <- "bishopcity"
+weights <- "population"
+controls <- c('altitudine', 'escursione', 'costal', 'nearsea', 'population', 
+    'pop2', 'gini_land', 'gini_income')
+g <- ivDiag(data = gsz, Y = Y, D = D, Z = Z, 
+    controls = controls, weights = weights,
+    parallel = FALSE, nboots = 10)
+}
+
+

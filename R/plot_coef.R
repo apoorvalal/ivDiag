@@ -18,6 +18,11 @@ plot_coef <- function(out,
   ylim = NULL
 ) {
 
+  # check
+  if (is.null(out)==FALSE) {
+    if (inherits(out, "ivDiag") == FALSE) {stop("\"out\" needs to be a \"ltz\" object.")}
+  }
+
   # title
   if (is.null(main)==TRUE) {
     main <- "OLS and 2SLS Estimates with 95% CIs"

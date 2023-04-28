@@ -1,6 +1,7 @@
 \name{eff_F}
 \alias{eff_F}
-\title{Computes effective F statistic}
+\title{Effective F}
+\description{Computes the effective F statistic.}
 \usage{
 eff_F(data, Y, D, Z, controls = NULL, FE = NULL, cl = NULL, weights = NULL)
 }
@@ -14,6 +15,9 @@ eff_F(data, Y, D, Z, controls = NULL, FE = NULL, cl = NULL, weights = NULL)
 \item{cl}{a string indicating the clustering variable.}
 \item{weights}{a string indicating the variable that stores weights.}
 }
-\description{
-Computes effective F statistic.
+\value{
+  the effective F statistic. 
+}
+\references{
+  Olea, José Luis Montiel, and Carolin Pflueger. 2013. "A Robust Test for Weak Instruments."" Journal of Business & Economic Statistics 31 (3): 358–69.
 }

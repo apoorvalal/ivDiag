@@ -5,9 +5,10 @@
 ## Installation
 ##########################
 
-library(remotes)
-install_github("apoorvalal/ivDiag")
+# library(remotes)
+# install_github("apoorvalal/ivDiag")
 
+# install.packages("ivDiag")
 
 ##########################
 ## Example 1: Rueda (2017)
@@ -47,8 +48,11 @@ g
 # plot coefficients and CIs
 plot_coef(g)
 
+plot_coef(g, ols.methods = c("analy"), iv.methods = c("analy", "ar", "tf"),
+  main = "Comparison between OLS and IV Estimates", ylab = "Estimates", 
+  grid = FALSE, stats = FALSE, ylim = c(-2, 0.5))
 
-## seperate functions
+## separate functions
 eff_F(data = rueda, Y = Y, D = D, Z = Z, controls = controls, cl = cl, 
       FE = NULL, weights = NULL)
 
@@ -91,10 +95,12 @@ zfs <- lm_robust(totassoc_p ~ bishopcity + altitudine + escursione + costal + ne
 summary(zfs)$coefficients["bishopcity", 1:2]
 
 ## Local-to-zero adjustment
-ltz_est <- ltz(data = gsz, Y = Y, D = D, Z = Z, controls = controls, weights = weights, 
-              mu = 0.178, Sig = 0.137^2)
-ltz_est
+ltz_out <- ltz(data = gsz, Y = Y, D = D, Z = Z, controls = controls, weights = weights, 
+               prior = c(0.178, 0.137))
+ltz_out
 
 ## visualization
-viz_iv_dists(g, ltz_est, xlim = c(-0.5, 7)) 
+plot_ltz(ltz_out, xlim = c(-0.5, 7))
+
+plot_ltz(iv_est = ltz_out$iv[1:2], ltz_est = ltz_out$ltz[1:2], prior = ltz_out$prior)
 
