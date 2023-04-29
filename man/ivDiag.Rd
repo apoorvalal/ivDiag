@@ -51,17 +51,15 @@ Lee, David S, Justin McCrary, Marcelo J Moreira, and Jack Porter. 2022. "Valid t
   \code{\link{plot_coef}}
 }
 \examples{
-library(ivDiag)
 data(ivDiag)
-Y <- "totassoc_p"
-D <- "libero_comune_allnord"
-Z <- "bishopcity"
-weights <- "population"
-controls <- c('altitudine', 'escursione', 'costal', 'nearsea', 'population', 
-    'pop2', 'gini_land', 'gini_income')
-g <- ivDiag(data = gsz, Y = Y, D = D, Z = Z, 
-    controls = controls, weights = weights,
-    parallel = FALSE, nboots = 10)
+g <- ivDiag(data = rueda, Y = "e_vote_buying", D = "lm_pob_mesa", 
+    Z = "lz_pob_mesa_f", controls = c("lpopulation", "lpotencial"), 
+    cl = "muni_code", parallel = FALSE, nboots = 10)
+library(testthat)
+test_that("Check omnibus function", {
+  expect_equal(as.numeric(g$est_2sls[1, 1]), -0.9835)
+  expect_equal(as.numeric(g$AR$Fstat[1]), 50.5097)
+})
 }
 
 

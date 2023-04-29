@@ -93,7 +93,7 @@ ivDiag <- function(
   #####################################################
   # Bootstrap function
   #####################################################
-  cat("Bootstrapping:\n")
+  message("Bootstrapping:\n")
   boot.core <- function() {
     if (is.null(cl) == TRUE) {
       # draw bootstrap sample
@@ -148,7 +148,7 @@ ivDiag <- function(
     if (is.null(cores)) {
       cores <- parallel::detectCores() - 1
     }
-    cat("Parallelising ", nboots, " reps on ", cores, " cores \n", sep = "")
+    message("Parallelising ", nboots, " reps on ", cores, " cores \n", sep = "")
     # register
     cl.parallel <- future::makeClusterPSOCK(cores, verbose = FALSE)
     doParallel::registerDoParallel(cl.parallel)
@@ -193,7 +193,7 @@ ivDiag <- function(
 
   # timing
   t1 <- Sys.time() - t0
-  cat("Bootstrap took", sprintf("%.3f", t1), "sec.\n")
+  message("Bootstrap took", sprintf("%.3f", t1), "sec.\n")
 
   ##############################
   # prep output
@@ -240,7 +240,7 @@ ivDiag <- function(
   # AR test
   AR <- AR_test(
     data = data, Y = Y, D = D, Z = Z, controls = controls, FE = FE,
-    cl = cl, weights = weights, prec = prec, alpha = 0.05, 
+    cl = cl, weights = weights, prec = prec, CI = TRUE, alpha = 0.05, 
     parallel = parallel, cores = cores
   )
 

@@ -9,6 +9,7 @@
 #' @param cl Cluster name
 #' @param weights weighting vector
 #' @param prec precision of CI in string
+#' @param CI whether to conduct inversion to get CI
 #' @param alpha level of statitical significance
 #' @param parallel parallel computing
 #' @param cores number of cores
@@ -17,7 +18,7 @@
 
 AR_test = function(
     data, Y, D, Z, controls, FE = NULL, cl = NULL,
-    weights = NULL, prec = 4, alpha = 0.05,
+    weights = NULL, prec = 4, CI = TRUE, alpha = 0.05,
     parallel = NULL, cores = NULL) {
   # keep rows with complete data
   X <- controls
@@ -27,7 +28,7 @@ AR_test = function(
 
   # parallelising
   if (is.null(parallel) == TRUE) {
-    if (nrow(data) > 5000) {
+    if (nrow(data) > 5000 & CI == TRUE) {
       parallel <- TRUE
     } else {
       parallel <- FALSE
@@ -67,74 +68,81 @@ AR_test = function(
   Fstat <- s$F.fstat
 
   # Confidence intervals
-  cat("AR Test Inversion...\n")
-  if (parallel == FALSE) {
-    accept <- rep(NA, ngrid)
-    for (i in 1:ngrid) {
-      d[, Y] <- Ytil - beta_seq[i] * Dtil
-      if (is.null(weights) == TRUE) {
-        m2 = lfe::felm(fmla, data = d)
-      } else {
-        m2 = lfe::felm(fmla, data = d, weights = d[, weights])
+  if (CI == TRUE) {
+    message("AR Test Inversion...\n")
+    if (parallel == FALSE) {
+      accept <- rep(NA, ngrid)
+      for (i in 1:ngrid) {
+        d[, Y] <- Ytil - beta_seq[i] * Dtil
+        if (is.null(weights) == TRUE) {
+          m2 = lfe::felm(fmla, data = d)
+        } else {
+          m2 = lfe::felm(fmla, data = d, weights = d[, weights])
+        }
+        m2 <- robustify(m2)
+        s2 <- summary(m2)
+        accept[i] <- ifelse(s2$pval >= alpha, 1, 0)
       }
-      m2 <- robustify(m2)
-      s2 <- summary(m2)
-      accept[i] <- ifelse(s2$pval >= alpha, 1, 0)
+    } else {
+      # parallel computing
+      if (is.null(cores)) {
+        cores <- parallel::detectCores() - 1
+      }
+      message("Parallelising on ", cores, " cores \n\n", sep = "")
+      # register
+      cl.parallel <- future::makeClusterPSOCK(cores, verbose = FALSE)
+      doParallel::registerDoParallel(cl.parallel)
+      expfun <- c("OLS", "IV", "formula_lfe", "robustify")
+      accept <- foreach(
+        i = 1:ngrid, .combine = c, .inorder = FALSE,
+        .export = expfun,
+        .packages = c("lfe")
+      ) %dopar% {
+        d[, Y] <- Ytil - beta_seq[i] * Dtil
+        if (is.null(weights) == TRUE) {
+          m2 = lfe::felm(fmla, data = d)
+        } else {
+          m2 = lfe::felm(fmla, data = d, weights = d[, weights])
+        }
+        m2 <- robustify(m2)
+        s2 <- summary(m2)
+        return(ifelse(s2$pval >= alpha, 1, 0))
+      }
+      doParallel::stopImplicitCluster()
     }
+    # summarize
+    bounded <- FALSE
+    if (sum(accept) == ngrid) {
+      ci <- c(-Inf, Inf)
+      ci.print <- "(-Inf, Inf)" # all accepted
+    } else if (sum(accept) == 0) {
+      ci <- NA
+      ci.print <- "empty"
+    } else if (accept[1] == 0 && accept[ngrid] == 0) {
+      betas <- range(beta_seq[accept == 1])
+      ci <- betas
+      ci.print <- paste0("[", sprintf(paste0("%.", prec, "f"), betas[1]), ", ", sprintf(paste0("%.", prec, "f"), betas[2]), "]") # bounded interval
+      bounded <- TRUE
+    } else if (accept[1] == 1 && accept[ngrid] == 1) {
+      betas <- range(beta_seq[accept == 0]) # e.g. 1 1 1 1 0 0 0 1 1 1
+      ci <- c(-Inf, betas[1], betas[2], Inf)
+      ci.print <- paste0("(-Inf, ", sprintf(paste0("%.", prec, "f"), betas[1]), "] Union [", sprintf(paste0("%.", prec, "f"), betas[2]), ", Inf)")
+    } else if (accept[1] == 0 && accept[ngrid] == 1) {
+      betas <- range(beta_seq[accept == 1]) # e.g. 0 0 0 1 1 1 1 1
+      ci <- c(betas[1], Inf)
+      ci.print <- paste0("[", sprintf(paste0("%.", prec, "f"), betas[1]), ", Inf)")
+    } else if (accept[1] == 1 && accept[ngrid] == 0) {
+      betas <- range(beta_seq[accept == 1]) # e.g. 1 1 1 1 1 0 0 0
+      ci <- c(-Inf, betas[2])
+      ci.print <- paste0("(-Inf, ", sprintf(paste0("%.", prec, "f"), betas[2]), "]")
+    }
+  }
+  
+  # output
+  if (CI == TRUE) {
+    out <- list(Fstat = round(Fstat, prec), ci.print = ci.print, ci = ci, bounded = bounded)
   } else {
-    # parallel computing
-    if (is.null(cores)) {
-      cores <- parallel::detectCores() - 1
-    }
-    cat("Parallelising on ", cores, " cores \n\n", sep = "")
-    # register
-    cl.parallel <- future::makeClusterPSOCK(cores, verbose = FALSE)
-    doParallel::registerDoParallel(cl.parallel)
-    expfun <- c("OLS", "IV", "formula_lfe", "robustify")
-    accept <- foreach(
-      i = 1:ngrid, .combine = c, .inorder = FALSE,
-      .export = expfun,
-      .packages = c("lfe")
-    ) %dopar% {
-      d[, Y] <- Ytil - beta_seq[i] * Dtil
-      if (is.null(weights) == TRUE) {
-        m2 = lfe::felm(fmla, data = d)
-      } else {
-        m2 = lfe::felm(fmla, data = d, weights = d[, weights])
-      }
-      m2 <- robustify(m2)
-      s2 <- summary(m2)
-      return(ifelse(s2$pval >= alpha, 1, 0))
-    }
-    doParallel::stopImplicitCluster()
+    out <- list(Fstat = round(Fstat, prec))
   }
-
-  # summarize
-  bounded <- FALSE
-  if (sum(accept) == ngrid) {
-    ci <- c(-Inf, Inf)
-    ci.print <- "(-Inf, Inf)" # all accepted
-  } else if (sum(accept) == 0) {
-    ci <- NA
-    ci.print <- "empty"
-  } else if (accept[1] == 0 && accept[ngrid] == 0) {
-    betas <- range(beta_seq[accept == 1])
-    ci <- betas
-    ci.print <- paste0("[", sprintf(paste0("%.", prec, "f"), betas[1]), ", ", sprintf(paste0("%.", prec, "f"), betas[2]), "]") # bounded interval
-    bounded <- TRUE
-  } else if (accept[1] == 1 && accept[ngrid] == 1) {
-    betas <- range(beta_seq[accept == 0]) # e.g. 1 1 1 1 0 0 0 1 1 1
-    ci <- c(-Inf, betas[1], betas[2], Inf)
-    ci.print <- paste0("(-Inf, ", sprintf(paste0("%.", prec, "f"), betas[1]), "] Union [", sprintf(paste0("%.", prec, "f"), betas[2]), ", Inf)")
-  } else if (accept[1] == 0 && accept[ngrid] == 1) {
-    betas <- range(beta_seq[accept == 1]) # e.g. 0 0 0 1 1 1 1 1
-    ci <- c(betas[1], Inf)
-    ci.print <- paste0("[", sprintf(paste0("%.", prec, "f"), betas[1]), ", Inf)")
-  } else if (accept[1] == 1 && accept[ngrid] == 0) {
-    betas <- range(beta_seq[accept == 1]) # e.g. 1 1 1 1 1 0 0 0
-    ci <- c(-Inf, betas[2])
-    ci.print <- paste0("(-Inf, ", sprintf(paste0("%.", prec, "f"), betas[2]), "]")
-  }
-
-  return(list(Fstat = round(Fstat, prec), ci.print = ci.print, ci = ci, bounded = bounded))
+  return(out)
 }
