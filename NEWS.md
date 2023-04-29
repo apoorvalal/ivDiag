@@ -1,3 +1,3 @@
-# ivDiag 1.0.1
+# ivDiag 1.0.2
 First complete version ready for CRAN submission.
 

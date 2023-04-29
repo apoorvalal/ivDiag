@@ -49,12 +49,17 @@ Lee, David S, Justin McCrary, Marcelo J Moreira, and Jack Porter. 2022. "Valid t
 }
 \seealso{
   \code{\link{plot_coef}}
+  \code{\link{eff_F}}
+  \code{\link{AR_test}}
+  \code{\link{tF}}
 }
 \examples{
 data(ivDiag)
 g <- ivDiag(data = rueda, Y = "e_vote_buying", D = "lm_pob_mesa", 
     Z = "lz_pob_mesa_f", controls = c("lpopulation", "lpotencial"), 
     cl = "muni_code", parallel = FALSE, nboots = 10)
+plot_coef(g)    
+    
 library(testthat)
 test_that("Check omnibus function", {
   expect_equal(as.numeric(g$est_2sls[1, 1]), -0.9835)

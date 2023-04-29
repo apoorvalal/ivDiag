@@ -27,6 +27,9 @@ AR_test(data, Y, D, Z, controls, FE = NULL, cl = NULL, weights = NULL,
   \item{ci}{Confidence interval via intervsion (numeric version).}
   \item{bounded}{If the confidence interval is bounded.}
 }
+\seealso{
+  \code{\link{ivDiag}}
+}
 \examples{
 data(ivDiag)
 AR.out <- AR_test(data = rueda, Y = "e_vote_buying", D = "lm_pob_mesa", 

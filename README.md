@@ -65,6 +65,7 @@ require(wCorr)
 require(haven)
 require(glue)
 require(patchwork)
+require(testthat)
 ```
 
 You can use the following code to install the required packages:
@@ -79,8 +80,8 @@ install_all <- function(packages) {
   }
 }
 
-packages <- c("foreach", "future", "doParallel", "lfe", "fixest", 
-              "ggplot2", "ggfortify", "wCorr", "haven", "glue", "patchwork")
+packages <- c("foreach", "future", "doParallel", "lfe", "fixest", "ggplot2", 
+              "ggfortify", "wCorr", "haven", "glue", "patchwork", "testthat")
 install_all(packages)
 ```
 

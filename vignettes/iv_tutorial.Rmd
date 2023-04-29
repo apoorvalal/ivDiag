@@ -1,5 +1,5 @@
 ---
-title: 'Tutorial for ivDiag'
+title: 'Tutorial'
 output:
   rmarkdown::html_vignette:
     toc: false
@@ -29,7 +29,7 @@ knitr::opts_chunk$set(
 ```  
 
 
-The **ivDiag** package is a toolkit we create for researchers to conduct estimation, inference, sensitivity analysis, and visualization with instrumental variable (IV) designs. It provides **R** implementations of the guidelines proposed in @lal2023trust, enabling researchers to obtain reliable and robust estimates of their IV models.
+The **ivDiag** package is a toolkit created for researchers to conduct estimation, inference, sensitivity analysis, and visualization with instrumental variable (IV) designs. It provides **R** implementations of the guidelines proposed in @lal2023trust, enabling researchers to obtain reliable and robust estimates of their IV models.
 
 The package includes a range of functions to compute various standard errors (SEs), multiple types of *F*-statistics, and weak-IV robust confidence intervals (CIs). These features ensure that researchers can accurately capture the uncertainty associated with their IV estimates and make valid statistical inferences.
 
@@ -175,7 +175,7 @@ plot_coef(g)
 ```
 
 
-Users can also adjust the look of the plot and control which estimates to shown using various options. For example:
+Users can also adjust the appearance of the plot and control which estimates to be shown using various options. For example:
 ```{r}
 plot_coef(g, ols.methods = c("analy"), iv.methods = c("analy", "ar", "tf"),
   main = "Comparison between OLS and IV Estimates", ylab = "Estimates", 
@@ -197,13 +197,13 @@ eff_F(data = rueda, Y = Y, D = D, Z = Z, controls = controls, cl = cl,
 ### AR test
 
 ```{r rueda_AR}
-AR_test(data = rueda, Y=Y, D = D, Z = Z, controls = controls, cl = cl, 
+AR_test(data = rueda, Y = Y, D = D, Z = Z, controls = controls, cl = cl, 
         FE = NULL, weights = NULL)
 ```
 
 ### *tF* procedure
 
-`tF` takes in a 2SLS estimate, its SE (analytic or bootstrapped), and the first-stage *F* statistics (obtain from any methods).
+`tF` takes in a 2SLS estimate, its SE (analytic or bootstrapped), and the first-stage *F* statistics (obtained from any methods).
 ```{r}
 tF(coef = -0.9835, se = 0.1540, Fstat = 8598)
 ```
@@ -282,7 +282,7 @@ plot_coef(g)
 
 ## ZFS tests and LTZ adjustment
 
-The authors conduct a ZFS test using the subsample of southern Italian cities, where the free-city experience was argubly irrelevant. The ZFS test is simply a reduced-form regression of the outcome on the instrument. The coefficient and SE of the instrument `bishopcity` is `0.178` and `0.137`, respectively.
+The authors conduct a ZFS test using the subsample of southern Italian cities, where the free-city experience was arguably irrelevant. The ZFS test is simply a reduced-form regression of the outcome on the instrument. The coefficient and SE of the instrument `bishopcity` is `0.178` and `0.137`, respectively.
 ```{r}
 library(estimatr)
 zfs <- lm_robust(totassoc_p ~ bishopcity + altitudine + escursione + costal + nearsea + 
@@ -292,7 +292,7 @@ zfs <- lm_robust(totassoc_p ~ bishopcity + altitudine + escursione + costal + ne
 summary(zfs)$coefficients["bishopcity", 1:2]
 ```
 
-Setting `0.178` as the prior mean and `0.137` as its standard deviation (SD), we can perform a LTZ adjustment on the IV estimate. 
+Setting `0.178` as the prior mean and `0.137` as its standard deviation (SD), we can perform a LTZ adjustment on the 2SLS/IV estimate. 
 ```{r}
 ltz_out <- ltz(data = gsz, Y = Y, D = D, Z = Z, controls = controls, weights = weights, 
               prior = c(0.178, 0.137))

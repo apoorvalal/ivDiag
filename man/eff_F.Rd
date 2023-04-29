@@ -18,6 +18,9 @@ eff_F(data, Y, D, Z, controls = NULL, FE = NULL, cl = NULL, weights = NULL)
 \value{
   the effective F statistic. 
 }
+\seealso{
+  \code{\link{ivDiag}}
+}
 \examples{
 effF <- eff_F(data = rueda, Y = "e_vote_buying", D = "lm_pob_mesa", 
     Z = "lz_pob_mesa_f", controls = c("lpopulation", "lpotencial"), 

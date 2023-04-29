@@ -22,6 +22,9 @@ ltz(data, Y, D, Z, controls, FE = NULL, cl = NULL, weights = NULL, prior, prec =
   \item{ltz}{results after local-to-zerio adjustment.}
   \item{prior}{prior mean and standard deviation}  
 }
+\seealso{
+  \code{\link{plot_coef}}
+}
 \examples{
 data(ivDiag)
 controls <- c('altitudine', 'escursione', 'costal', 'nearsea', 'population', 
@@ -29,6 +32,8 @@ controls <- c('altitudine', 'escursione', 'costal', 'nearsea', 'population',
 ltz_out <- ltz(data = gsz, Y = "totassoc_p", D = "libero_comune_allnord", 
     Z = "bishopcity", controls = controls, weights = "population", 
     prior = c(0.178, 0.137))
+plot_ltz(ltz_out)    
+    
 library(testthat)    
 test_that("Check local-to-zero adjustment", {
   expect_equal(as.numeric(ltz_out$ltz[1]), 3.6088)
