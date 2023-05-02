@@ -61,6 +61,12 @@ AR_test(data = rueda, Y = Y, D = D, Z = Z, controls = controls, cl = cl,
 
 tF(coef = -0.9835, se = 0.1540, Fstat = 8598)
 
+# without bootstrap or AR test
+g1<- ivDiag(data = rueda, Y=Y, D = D, Z = Z, controls = controls, 
+     cl = cl, bootstrap = FALSE, run.AR = FALSE)
+g1
+plot_coef(g1, ylim = c(-2, 1))
+
 ##########################
 ## Example 2: GSZ (2016)
 ##########################

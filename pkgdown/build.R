@@ -15,8 +15,8 @@ pkgdown::build_site(install = FALSE)
 
 # or alternatively
 library(pkgdown)
-init_site()
+#init_site()
 build_home()
+build_news()
 build_reference()
 build_articles()
-build_news()

@@ -131,7 +131,6 @@ g$AR
 g$tF
 ```
 
-
 ### Charaterizing the first stage
 
 `F_stat` stores various first-stage partial *F*-statistics, which assess the strength of the instruments. They include *F* statistic based classic analytic SEs, robust SEs, cluster-robust SEs (if `cl` is supplied), (blocked-)bootstrapped F statistic, and the effective F statistic [@olea2013robust]. 
@@ -165,6 +164,12 @@ g$df
 g$nvalues
 ```
 
+Moreover, users can turn off bootstrapping by setting `bootstrap = FALSE`:
+```{r eval = FALSE}
+ivDiag(data = rueda, Y=Y, D = D, Z = Z, controls = controls, 
+            cl = cl, bootstrap = FALSE)
+```
+
 ## Coefficients and CIs plot
 
 The `plot_coef()` function produces a coefficient plot for both OLS and 2SLS estimates using different inferential methods. It also shows the effective *F*-statistic, as well as the numbers of observations and clusters. This plot is made by base `R` and can be further altered by users. 
@@ -174,14 +179,12 @@ In this example, the 2SLS estimate is slightly larger in magnitude than the OLS 
 plot_coef(g)
 ```
 
-
 Users can also adjust the appearance of the plot and control which estimates to be shown using various options. For example:
 ```{r}
 plot_coef(g, ols.methods = c("analy"), iv.methods = c("analy", "ar", "tf"),
   main = "Comparison between OLS and IV Estimates", ylab = "Estimates", 
   grid = FALSE, stats = FALSE, ylim = c(-2, 0.5))
 ```
-
 
 ## Conduct tests seperately
 

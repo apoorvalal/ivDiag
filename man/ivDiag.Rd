@@ -5,6 +5,7 @@
 \description{Conducts various estimation and diagnostic procedure for instrumental variable designs in one shot.}
 \usage{
 ivDiag(data, Y, D, Z, controls = NULL, FE = NULL, cl = NULL, weights = NULL,
+  bootstrap = TRUE, run.AR = TRUE,
   nboots = 1000, parallel = TRUE, cores = NULL, 
   seed = 94305, prec = 4, debug = FALSE)
 }
@@ -17,10 +18,12 @@ ivDiag(data, Y, D, Z, controls = NULL, FE = NULL, cl = NULL, weights = NULL,
   \item{FE}{a vector of strings indicating the fixed effects variables.}
   \item{cl}{a string indicating the clustering variable.}
   \item{weights}{a string indicating the variable that stores weights.}
+  \item{bootstrap}{whether to turn on bootstrap (TRUE by default).}
+  \item{run.AR}{whether to run AR test (TRUE by default).}  
   \item{nboots}{a numeric value indicating the number of bootstrap runs.}
   \item{parallel}{a logical flag controlling parallel computing.}
   \item{cores}{setting the number of cores.}
-  \item{prec}{precision of CI in string; the default is 4.}
+  \item{prec}{precision of CI in string (4 by default).}
   \item{seed}{setting seed.}
   \item{debug}{for debugging purposes.}
 }
@@ -57,13 +60,11 @@ Lee, David S, Justin McCrary, Marcelo J Moreira, and Jack Porter. 2022. "Valid t
 data(ivDiag)
 g <- ivDiag(data = rueda, Y = "e_vote_buying", D = "lm_pob_mesa", 
     Z = "lz_pob_mesa_f", controls = c("lpopulation", "lpotencial"), 
-    cl = "muni_code", parallel = FALSE, nboots = 10)
-plot_coef(g)    
-    
-library(testthat)
-test_that("Check omnibus function", {
-  expect_equal(as.numeric(g$est_2sls[1, 1]), -0.9835)
-  expect_equal(as.numeric(g$AR$Fstat[1]), 50.5097)
+    cl = "muni_code", bootstrap = FALSE, run.AR = FALSE)
+plot_coef(g)
+library(testthat)    
+test_that("Check ivDiag output", {
+  expect_equal(as.numeric(g$est_2sls[1,1]), -0.9835)
 })
 }
 
