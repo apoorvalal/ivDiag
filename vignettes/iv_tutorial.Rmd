@@ -86,13 +86,16 @@ weights <- FE <- NULL # no weights or fixed effects
 par(mar = c(4, 4, 2, 2))
 plot(rueda$lz_pob_mesa_f, rueda$lm_pob_mesa, col = "#777777", cex = 0.5, 
      main = "Raw Data", xlab = "Instrument", ylab = "Treatment")
-abline(lm(lm_pob_mesa ~ lz_pob_mesa_f, data = rueda), col = 2, lwd = 2, lty = 2)
+abline(lm(lm_pob_mesa ~ lz_pob_mesa_f, data = rueda), 
+       col = 2, lwd = 2, lty = 2)
 
 # first stage (partial out)
 z_res <- lm(lz_pob_mesa_f ~ lpopulation + lpotencial, data = rueda)$residuals
 d_res <- lm(lm_pob_mesa ~ lpopulation + lpotencial, data = rueda)$residuals
-plot(z_res, d_res, col = "#777777", cex = 0.5, main = "Covariates Partialled Out", 
-     xlab = "Residualized Instrument", ylab = "Residualized Treatment")
+plot(z_res, d_res, col = "#777777", cex = 0.5, 
+     main = "Covariates Partialled Out", 
+     xlab = "Residualized Instrument", 
+     ylab = "Residualized Treatment")
 abline(lm(d_res ~ z_res), col = 2, lwd = 2, lty = 2)
 ```
 
@@ -260,7 +263,8 @@ Y <- "totassoc_p"
 D <- "libero_comune_allnord"
 Z <- "bishopcity"
 weights <- "population"
-controls <- c('altitudine', 'escursione', 'costal', 'nearsea', 'population', 'pop2', 'gini_land', 'gini_income')
+controls <- c('altitudine', 'escursione', 'costal', 'nearsea', 
+              'population', 'pop2', 'gini_land', 'gini_income')
 
 # table instrument and treatment
 table(gsz$bishopcity)
@@ -268,12 +272,14 @@ table(gsz$libero_comune_allnord)
 table(gsz$bishopcity, gsz$libero_comune_allnord)
 
 # distribution of the outcome
-hist(gsz$totassoc_p, breaks = 100, xlab = "#Nonprofit Organizations Per Capita")
+hist(gsz$totassoc_p, breaks = 100, 
+     xlab = "# Nonprofit Organizations Per Capita")
 ```
 
 We apply omnibus function `ivDiag` and plot the OLS and 2SLS coefficients and corresponding CIs.
 ```{r gsz2016_est, cache = TRUE}
-g <- ivDiag(data = gsz, Y = Y, D = D, Z = Z, controls = controls, weights = weights)
+g <- ivDiag(data = gsz, Y = Y, D = D, Z = Z, controls = controls, 
+            weights = weights)
 g
 ```
 
@@ -288,17 +294,19 @@ plot_coef(g)
 The authors conduct a ZFS test using the subsample of southern Italian cities, where the free-city experience was arguably irrelevant. The ZFS test is simply a reduced-form regression of the outcome on the instrument. The coefficient and SE of the instrument `bishopcity` is `0.178` and `0.137`, respectively.
 ```{r}
 library(estimatr)
-zfs <- lm_robust(totassoc_p ~ bishopcity + altitudine + escursione + costal + nearsea + 
-          population + pop2 + gini_land + gini_income + capoluogo, data = gsz_south, 
-          weights = gsz_south$population, se_type = "HC1")
+zfs <- lm_robust(totassoc_p ~ bishopcity + altitudine + escursione 
+                 + costal + nearsea + population + pop2 + gini_land + 
+                   gini_income + capoluogo, data = gsz_south, 
+                 weights = gsz_south$population, se_type = "HC1")
 
 summary(zfs)$coefficients["bishopcity", 1:2]
 ```
 
 Setting `0.178` as the prior mean and `0.137` as its standard deviation (SD), we can perform a LTZ adjustment on the 2SLS/IV estimate. 
 ```{r}
-ltz_out <- ltz(data = gsz, Y = Y, D = D, Z = Z, controls = controls, weights = weights, 
-              prior = c(0.178, 0.137))
+ltz_out <- ltz(data = gsz, Y = Y, D = D, Z = Z, 
+    controls = controls, weights = weights, 
+    prior = c(0.178, 0.137))
 ltz_out
 ```
 
@@ -309,7 +317,8 @@ plot_ltz(ltz_out, xlim = c(-0.5, 7))
 
 `plot_ltz` can also take in the IV estimates, the LTZ estimates, and the prior separately, all of which are two-element vectors with a coefficient and a SD/SE estimate.
 ```{r message = FALSE, warning = FALSE}
-plot_ltz(iv_est = ltz_out$iv[1:2], ltz_est = ltz_out$ltz[1:2], prior = ltz_out$prior)
+plot_ltz(iv_est = ltz_out$iv[1:2], ltz_est = ltz_out$ltz[1:2], 
+         prior = ltz_out$prior)
 ```
 
 

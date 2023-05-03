@@ -14,6 +14,7 @@ devtools::install_github("r-lib/pkgdown")
 pkgdown::build_site(install = FALSE)
 
 # or alternatively
+setwd("~/github/ivDiag")
 library(pkgdown)
 #init_site()
 build_home()

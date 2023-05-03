@@ -38,7 +38,7 @@ experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](h
 
 You can install the **ivDiag** package from CRAN: 
 ```{r eval=FALSE}
-install.packages('ivDiag')  
+install.packages("ivDiag", repos='http://cran.us.r-project.org')
 ```
 
 You can also install the up-to-date development version from Github: 

@@ -40,7 +40,7 @@ Stanford University.
 You can install the **ivDiag** package from CRAN:
 
 ``` r
-install.packages('ivDiag')  
+install.packages("ivDiag", repos='http://cran.us.r-project.org')
 ```
 
 You can also install the up-to-date development version from Github:
