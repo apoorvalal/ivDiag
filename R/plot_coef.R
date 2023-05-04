@@ -150,10 +150,10 @@ plot_coef <- function(out,
   }
   if (stats == TRUE) {
     if (is.null(out$N_cl) == TRUE) {
-      legend("topleft", c(paste0("Effective F = ", sprintf("%.1f", out$F_stat[5])),
+      legend("topleft", c(paste0("Effective F = ", sprintf("%.1f", out$F_stat["F.effective"])),
         paste0("N = ", out$N)), bty="n")
     } else {
-      legend("topleft", c(paste0("Effective F = ", sprintf("%.1f", out$F_stat[5])),
+      legend("topleft", c(paste0("Effective F = ", sprintf("%.1f", out$F_stat["F.effective"])),
         paste0("N = ", out$N, ", Ncl = ", out$N_cl)), bty="n")
     }
     
