@@ -16,7 +16,7 @@ AR_test(data, Y, D, Z, controls, FE = NULL, cl = NULL, weights = NULL,
   \item{cl}{a string indicating the clustering variable.}
   \item{weights}{a string indicating the variable that stores weights.}
   \item{CI}{a logical flag controlling whether to calcualte the confidence interval using the inversion method.}
-  \item{prec}{precision of CI in string; the default is 4.}
+  \item{prec}{precision of results (4 by default).}
   \item{alpha}{level of statitical significance; the default is 0.05.}
   \item{parallel}{a logical flag controlling parallel computing.}
   \item{cores}{setting the number of cores.}

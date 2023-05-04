@@ -7,9 +7,11 @@
 #' @param FE fixed effects (character vector)
 #' @param cl clustering column for SE (character vector)
 #' @param weights weights name (string)
+#' @param prec precision for output
 #' @export
-eff_F = function(data, Y, D, Z, controls = NULL, FE = NULL, cl = NULL, weights = NULL # weights is a string
-) {
+eff_F = function(data, Y, D, Z, controls = NULL, FE = NULL, 
+  cl = NULL, weights = NULL, prec = 4
+  ) {
   fmla = formula_lfe(Y = Y, W = D, Z = Z, X = controls, FE = FE, Cl = cl)
   if (is.null(weights)) {
     ivmod = lfe::felm(fmla, data = data)
@@ -35,5 +37,5 @@ eff_F = function(data, Y, D, Z, controls = NULL, FE = NULL, cl = NULL, weights =
   # instrument matrix
   Q_zz = (t(Z) %*% Z)
   eff_F = c(t(pi) %*% Q_zz %*% pi / sum(diag(Sigma %*% Q_zz)))
-  return(eff_F)
+  return(round(eff_F, prec))
 }

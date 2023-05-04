@@ -3,12 +3,13 @@
 \title{Valid t-Ratio Procedure}
 \description{Performs the valid t-ratio procedure.}
 \usage{
-tF(coef, se, Fstat)
+tF(coef, se, Fstat, prec = 4)
 }
 \arguments{
 \item{coef}{a 2SLS coefficient.}
 \item{se}{a standard error estimate for the estimated 2SLS coefficient.}
 \item{Fstat}{a first-stage partial F statistic.}
+\item{prec}{precision of results (4 by default).}
 }
 \value{
   Results from a valid t-ratio test given the first-stage F statistic.

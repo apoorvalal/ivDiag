@@ -3,7 +3,8 @@
 \title{Effective F}
 \description{Computes the effective F statistic.}
 \usage{
-eff_F(data, Y, D, Z, controls = NULL, FE = NULL, cl = NULL, weights = NULL)
+eff_F(data, Y, D, Z, controls = NULL, FE = NULL, cl = NULL, 
+  weights = NULL, prec = 4)
 }
 \arguments{
 \item{data}{name of a dataframe.}
@@ -14,6 +15,7 @@ eff_F(data, Y, D, Z, controls = NULL, FE = NULL, cl = NULL, weights = NULL)
 \item{FE}{a vector of strings indicating the fixed effects variables.}
 \item{cl}{a string indicating the clustering variable.}
 \item{weights}{a string indicating the variable that stores weights.}
+\item{prec}{precision of results (4 by default).}
 }
 \value{
   the effective F statistic. 

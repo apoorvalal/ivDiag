@@ -2,7 +2,8 @@
 #' @param coef 2SLS coefficient
 #' @param se SE for 2SLS estimate
 #' @param Fstat first stage F
-tF <- function(coef, se, Fstat) {
+#' @param prec precision for output
+tF <- function(coef, se, Fstat, prec = 4) {
   tstat <- coef / se
   F.sqrt <- sqrt(Fstat)
   F0.sqrt <- seq(2, 10.3, 0.1)
@@ -27,7 +28,7 @@ tF <- function(coef, se, Fstat) {
   }
   ci <- c(coef - cF * se, coef + cF * se)
   p <- (1 - pnorm(abs(tstat) / (cF / 1.96))) * 2 # adjusted p value
-  out <- c(Fstat, cF, coef, se, tstat, ci, p)
+  out <- round(c(Fstat, cF, coef, se, tstat, ci, p), prec)
   names(out) <- c("F", "cF", "Coef", "SE", "t", "CI2.5%", "CI97.5%", "p-value")
   return(out)
 }

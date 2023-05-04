@@ -15,7 +15,7 @@ ltz(data, Y, D, Z, controls, FE = NULL, cl = NULL, weights = NULL, prior, prec =
   \item{cl}{a string indicating the clustering variable.}
   \item{weights}{a string indicating the variable that stores weights.}
   \item{prior}{prior mean and standard deviation of the direct effect of instrument on outcome.}
-  \item{prec}{precision of CI in string; the default is 4.}
+  \item{prec}{precision of results (4 by default).}
 }
 \value{
   \item{iv}{results from a 2SLS regression.}

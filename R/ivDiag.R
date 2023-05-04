@@ -333,7 +333,7 @@ ivDiag <- function(
       # first strage rho
       rho = round(rho, prec),
       # tF procedure
-      tF = round(tF.out, prec),
+      tF = tF.out,
       # reduced form and first stage
       est_rf = round(est_rf, prec),
       est_fs = round(est_fs, prec),

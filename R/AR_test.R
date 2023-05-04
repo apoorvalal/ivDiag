@@ -120,19 +120,19 @@ AR_test = function(
       ci.print <- "empty"
     } else if (accept[1] == 0 && accept[ngrid] == 0) {
       betas <- range(beta_seq[accept == 1])
-      ci <- betas
+      ci <- round(betas, prec)
       ci.print <- paste0("[", sprintf(paste0("%.", prec, "f"), betas[1]), ", ", sprintf(paste0("%.", prec, "f"), betas[2]), "]") # bounded interval
       bounded <- TRUE
     } else if (accept[1] == 1 && accept[ngrid] == 1) {
-      betas <- range(beta_seq[accept == 0]) # e.g. 1 1 1 1 0 0 0 1 1 1
+      betas <- round(range(beta_seq[accept == 0]), prec) # e.g. 1 1 1 1 0 0 0 1 1 1
       ci <- c(-Inf, betas[1], betas[2], Inf)
       ci.print <- paste0("(-Inf, ", sprintf(paste0("%.", prec, "f"), betas[1]), "] Union [", sprintf(paste0("%.", prec, "f"), betas[2]), ", Inf)")
     } else if (accept[1] == 0 && accept[ngrid] == 1) {
-      betas <- range(beta_seq[accept == 1]) # e.g. 0 0 0 1 1 1 1 1
+      betas <- round(range(beta_seq[accept == 1]), prec) # e.g. 0 0 0 1 1 1 1 1
       ci <- c(betas[1], Inf)
       ci.print <- paste0("[", sprintf(paste0("%.", prec, "f"), betas[1]), ", Inf)")
     } else if (accept[1] == 1 && accept[ngrid] == 0) {
-      betas <- range(beta_seq[accept == 1]) # e.g. 1 1 1 1 1 0 0 0
+      betas <- round(range(beta_seq[accept == 1]), prec) # e.g. 1 1 1 1 1 0 0 0
       ci <- c(-Inf, betas[2])
       ci.print <- paste0("(-Inf, ", sprintf(paste0("%.", prec, "f"), betas[2]), "]")
     }
