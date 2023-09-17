@@ -37,7 +37,7 @@ AR.out <- AR_test(data = rueda, Y = "e_vote_buying", D = "lm_pob_mesa",
     cl = "muni_code", CI = FALSE)
 library(testthat)    
 test_that("Check AR results", {
-  expect_equal(as.numeric(AR.out$Fstat[1]), 50.5097)
+  expect_equal(as.numeric(AR.out$Fstat[1]), 48.4768)
 })
 }
 \references{

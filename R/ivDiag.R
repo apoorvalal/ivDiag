@@ -161,7 +161,7 @@ ivDiag <- function(
       # register
       cl.parallel <- future::makeClusterPSOCK(cores, verbose = FALSE)
       doParallel::registerDoParallel(cl.parallel)
-      expfun <- c("OLS", "IV", "formula_lfe", "robustify")
+      expfun <- c("OLS", "IV", "formula_lfe")
       boot.out <- foreach::foreach(
         i = 1:nboots, .combine = rbind, .inorder = FALSE,
         .export = expfun,

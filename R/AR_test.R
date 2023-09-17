@@ -57,31 +57,37 @@ AR_test = function(
   colnames(d) <- c(Y, D, Z, cl, weights)
 
   # reduced form
-  fmla = formula_lfe(Y = Y, W = Z, X = NULL, FE = NULL, Cl = cl)
-  if (is.null(weights) == TRUE) {
-    m1 = lfe::felm(fmla, data = d)
-  } else {
-    m1 = lfe::felm(fmla, data = d, weights = d[, weights])
-  }
-  m1 <- robustify(m1)
-  s <- summary(m1)
-  Fstat <- s$F.fstat
+  fmla = formula_lfe(Y = Y, D = Z, X = NULL, FE = NULL, cl = cl)
+  
+  
+  # function to test each value on the real line
+  one.AR <- function(beta, d, Y, D, Z, cl, weights) {
+    d[, Y] <- d[, Y] - beta * d[, D]
+    p_iv <- length(Z)
+    reg <- OLS(data = d, Y = Y, D = Z, X = NULL, FE = NULL, cl = cl, weights = weights)
+    coef <- reg$coef
+    vcov <- reg$vcv
+    df2 <- reg$df
+    df1 <- p_iv
+    Fstat <- c((t(coef) %*% solve(vcov) %*% coef) / p_iv)
+    pval <- pf(Fstat, df1, df2, lower.tail = FALSE)
+    output <- c(Fstat, df1, df2, pval)
+    names(output) <- c("F", "df1", "df2", "p")
+    return(output)
+  } 
 
+  # AR test
+  Fstat <- one.AR(0, d = d, Y = Y, D = D, Z = Z, cl = cl, weights = weights)
+
+  
   # Confidence intervals
   if (CI == TRUE) {
     message("AR Test Inversion...\n")
     if (parallel == FALSE) {
       accept <- rep(NA, ngrid)
-      for (i in 1:ngrid) {
-        d[, Y] <- Ytil - beta_seq[i] * Dtil
-        if (is.null(weights) == TRUE) {
-          m2 = lfe::felm(fmla, data = d)
-        } else {
-          m2 = lfe::felm(fmla, data = d, weights = d[, weights])
-        }
-        m2 <- robustify(m2)
-        s2 <- summary(m2)
-        accept[i] <- ifelse(s2$pval >= alpha, 1, 0)
+      for (i in 1:ngrid) {    
+        test.out <-  one.AR(beta_seq[i], d = d, Y = Y, D = D, Z = Z, cl = cl, weights = weights) 
+        accept[i] <- ifelse(test.out[4] >= alpha, 1, 0)
       }
     } else {
       # parallel computing
@@ -92,25 +98,18 @@ AR_test = function(
       # register
       cl.parallel <- future::makeClusterPSOCK(cores, verbose = FALSE)
       doParallel::registerDoParallel(cl.parallel)
-      expfun <- c("OLS", "IV", "formula_lfe", "robustify")
+      expfun <- c("OLS", "IV", "formula_lfe", "OLS")
       accept <- foreach(
         i = 1:ngrid, .combine = c, .inorder = FALSE,
         .export = expfun,
         .packages = c("lfe")
       ) %dopar% {
-        d[, Y] <- Ytil - beta_seq[i] * Dtil
-        if (is.null(weights) == TRUE) {
-          m2 = lfe::felm(fmla, data = d)
-        } else {
-          m2 = lfe::felm(fmla, data = d, weights = d[, weights])
-        }
-        m2 <- robustify(m2)
-        s2 <- summary(m2)
-        return(ifelse(s2$pval >= alpha, 1, 0))
+        test.out <-  one.AR(beta_seq[i], d = d, Y = Y, D = D, Z = Z, cl = cl, weights = weights) 
+        return(ifelse(test.out[4] >= alpha, 1, 0))
       }
       doParallel::stopImplicitCluster()
     }
-    # summarize
+    # summarize ("accept" means reject the null)
     bounded <- FALSE
     if (sum(accept) == ngrid) {
       ci <- c(-Inf, Inf)
@@ -118,7 +117,7 @@ AR_test = function(
     } else if (sum(accept) == 0) {
       ci <- NA
       ci.print <- "empty"
-    } else if (accept[1] == 0 && accept[ngrid] == 0) {
+    } else if (accept[1] == 0 && accept[ngrid] == 0) { # e.g. 0 0 0 1 1 1 0 0 0
       betas <- range(beta_seq[accept == 1])
       ci <- round(betas, prec)
       ci.print <- paste0("[", sprintf(paste0("%.", prec, "f"), betas[1]), ", ", sprintf(paste0("%.", prec, "f"), betas[2]), "]") # bounded interval
@@ -137,6 +136,11 @@ AR_test = function(
       ci.print <- paste0("(-Inf, ", sprintf(paste0("%.", prec, "f"), betas[2]), "]")
     }
   }
+
+  ## Print acceptance ##
+  # accept <- cbind(beta_seq, accept)
+  # rownames(accept) <- NULL
+  # colnames(accept) <- c("beta", "accept")
   
   # output
   if (CI == TRUE) {

@@ -19,6 +19,6 @@ importFrom(patchwork, wrap_plots)
 importFrom("graphics", "abline", "axTicks", "axis", "box", "legend",
            "mtext", "points", "rect", "segments", "text")
 importFrom("stats", "as.formula", "complete.cases", "cor", "dnorm",
-           "pnorm", "qnorm", "quantile", "sd")
+           "pnorm", "qnorm", "quantile", "sd", "pf")
 importFrom("utils", "tail")
 importFrom("testthat", "test_that", "expect_equal")

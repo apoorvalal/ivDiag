@@ -23,15 +23,19 @@ ltz = function(data, Y, D, Z, controls, FE = NULL, cl = NULL, weights = NULL, pr
   Sig <- prior[2]^2
 
   # IV fit
-  fmla = formula_lfe(Y = Y, W = D, Z = Z, X = controls, FE = FE, Cl = cl)
+  fmla = formula_lfe(Y = Y, D = D, Z = Z, X = controls, FE = FE, cl = cl)
   if (is.null(weights)) {
-    m2 = robustify(lfe::felm(fmla, data = data))
+    m2 = lfe::felm(fmla, data = data)
   } else {
-    m2 = robustify(lfe::felm(fmla, data = data, weights = data[, weights]))
+    m2 = lfe::felm(fmla, data = data, weights = data[, weights])
   }
   iv_beta <- c(tail(m2$coefficients, n = 1)) # felm IV fits have endog coef at the tail
-  iv_Var <- c(tail(diag(m2$robustvcv), n = 1))
-  iv_se <- sqrt(iv_Var)
+  if (is.null(cl) == TRUE) {
+    iv_se <- tail(m2$rse, n = 1)
+  } else {
+    iv_se <- tail(m2$cse, n = 1)
+  }
+  iv_Var <- iv_se^2
   iv_t <- iv_beta / iv_se
   iv_ci <- qnorm(c(0.025, 0.975), iv_beta, iv_se)
   iv_p <- (1 - pnorm(abs(iv_t))) * 2

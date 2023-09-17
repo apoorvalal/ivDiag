@@ -1,3 +1,7 @@
+# ivDiag 1.0.6
+Fix clustering issues with both the main function and AR test (thanks to Michael
+Allen @mmooddaa for reporting this bug).
+
 # ivDiag 1.0.5
 Fix bugs with `plot_coef()`.
 

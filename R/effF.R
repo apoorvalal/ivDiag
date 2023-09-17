@@ -12,7 +12,7 @@
 eff_F = function(data, Y, D, Z, controls = NULL, FE = NULL, 
   cl = NULL, weights = NULL, prec = 4
   ) {
-  fmla = formula_lfe(Y = Y, W = D, Z = Z, X = controls, FE = FE, Cl = cl)
+  fmla = formula_lfe(Y = Y, D = D, Z = Z, X = controls, FE = FE, cl = cl)
   if (is.null(weights)) {
     ivmod = lfe::felm(fmla, data = data)
   } else {

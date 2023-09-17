@@ -1,15 +1,15 @@
 #' Stitches together formula for use in felm
 #' @param y The dependent variable
 #' @param X vector of controls
-#' @param W treatment variable
+#' @param D treatment variable
 #' @param FE vector of factor variables to be partialed out
 #' @param Z vector of instruments
-#' @param Cl vector of variables cluster standard errors (multi-way permitted by LFE)
+#' @param cl vector of variables cluster standard errors (multi-way permitted by LFE)
 #' @export
-formula_lfe <- function(Y, X, W = NULL, FE = NULL, Z = NULL, Cl = NULL) {
+formula_lfe <- function(Y, X, D = NULL, FE = NULL, Z = NULL, cl = NULL) {
   # 'second stage' step
-  if (!is.null(W) & is.null(Z)) { # there is W, but no instrument, such as OLS
-    felm_ss = paste(c(Y, paste(c(W, X), collapse = "+")), collapse = "~")
+  if (!is.null(D) & is.null(Z)) { # there is W, but no instrument, such as OLS
+    felm_ss = paste(c(Y, paste(c(D, X), collapse = "+")), collapse = "~")
   } else { # either there is Z or there is no W
     if (!is.null(X)) {
       felm_ss = paste(c(Y, paste(X, collapse = "+")), collapse = "~")
@@ -19,7 +19,7 @@ formula_lfe <- function(Y, X, W = NULL, FE = NULL, Z = NULL, Cl = NULL) {
   }
   # first stage
   if (!is.null(Z)) {
-    felm_fs = paste(c("(", paste(c(W, paste(Z, collapse = "+")),
+    felm_fs = paste(c("(", paste(c(D, paste(Z, collapse = "+")),
       collapse = "~"
     ), ")"), collapse = "")
   } else { # no instrument
@@ -32,43 +32,14 @@ formula_lfe <- function(Y, X, W = NULL, FE = NULL, Z = NULL, Cl = NULL) {
     facs = "0"
   }
   # clusters
-  if (!is.null(Cl)) {
-    clusts = paste(Cl, collapse = "+")
+  if (!is.null(cl)) {
+    clusts = paste(cl, collapse = "+")
   } else {
     clusts = "0"
   }
   # return formula
   as.formula(paste(c(felm_ss, facs, felm_fs, clusts), collapse = "|"))
 }
-
-# %%
-#' Stitches together formula for use in fixest
-#' @param y The dependent variable
-#' @param X vector of controls
-#' @param W treatment variable
-#' @param D vector of factor variables to be partialed out
-#' @param Z vector of instruments
-formula_fixest = function(y, X, W = NULL, D = NULL, Z = NULL) {
-  if (!is.null(W) & is.null(Z)) {
-    fixest_ss = paste(c(y, paste(c(W, X), collapse = "+")),
-      collapse = "~"
-    )
-  } else {
-    fixest_ss = paste(c(y, paste(X, collapse = "+")), collapse = "~")
-  }
-  if (!is.null(D))
-    facs = paste(D, collapse = "+")
-  else facs = "0"
-  if (!is.null(Z)) {
-    fixest_fs = paste(c(paste(c(W, paste(Z, collapse = "+")),
-      collapse = "~"
-    )), collapse = "")
-    as.formula(paste(c(fixest_ss, facs, fixest_fs), collapse = "|"))
-  } else {
-    as.formula(paste(c(fixest_ss, facs), collapse = "|"))
-  }
-}
-
 
 # %% partialer
 #' partial out controls and covariates from y
@@ -89,18 +60,33 @@ partialer <- function(Y, X, FE = NULL, data, weights = NULL) {
   return(m$residuals[, 1])
 }
 
+
+# $$$$$$\ $$\    $$\ 
+# \_$$  _|$$ |   $$ |
+#   $$ |  $$ |   $$ |
+#   $$ |  \$$\  $$  |
+#   $$ |   \$$\$$  / 
+#   $$ |    \$$$  /  
+# $$$$$$\    \$  /   
+# \______|    \_/    
+                   
+
 # %% run IV through FELM
 IV <- function(data, D, Y, Z, X = NULL, FE = NULL, cl = NULL, weights = NULL # weights is a string
 ) {
-  fmla = formula_lfe(Y = Y, W = D, Z = Z, X = X, FE = FE, Cl = cl)
+  fmla = formula_lfe(Y = Y, D = D, Z = Z, X = X, FE = FE, cl = cl)
   if (is.null(weights)) {
-    m2 = robustify(lfe::felm(fmla, data = data))
+    m2 = lfe::felm(fmla, data = data)
   } else {
-    m2 = robustify(lfe::felm(fmla, data = data, weights = data[, weights]))
+    m2 = lfe::felm(fmla, data = data, weights = data[, weights])
   }
   ## Output
   coef <- c(tail(m2$coefficients, n = 1)) # felm IV fits have endog coef at the tail
-  se <- c(tail(sqrt(diag(m2$robustvcv)), n = 1))
+  if (is.null(cl) == TRUE) {
+    se <- tail(m2$rse, n = 1)
+  } else {
+    se <- tail(m2$cse, n = 1)
+  }
   df <- m2$df.residual
   names(coef) <- names(se) <- names(df) <- NULL
   return(list(coef = coef, se = se, df = df))
@@ -110,11 +96,11 @@ IV <- function(data, D, Y, Z, X = NULL, FE = NULL, cl = NULL, weights = NULL # w
 get.vcov <- function(data, D, Y, Z, X = NULL, FE = NULL, cl = NULL, weights = NULL # weights is a string
 ) {
   p_iv <- length(Z)
-  fmla = formula_lfe(Y = Y, W = D, Z = Z, X = X, FE = FE, Cl = cl)
+  fmla = formula_lfe(Y = Y, D = D, Z = Z, X = X, FE = FE, cl = cl)
   if (is.null(weights)) {
-    m2 = robustify(lfe::felm(fmla, data = data))
+    m2 = lfe::felm(fmla, data = data)
   } else {
-    m2 = robustify(lfe::felm(fmla, data = data, weights = data[, weights]))
+    m2 = lfe::felm(fmla, data = data, weights = data[, weights])
   }
   stage1 <- m2$stage1
   p <- nrow(stage1$vcv)
@@ -135,26 +121,43 @@ get.vcov <- function(data, D, Y, Z, X = NULL, FE = NULL, cl = NULL, weights = NU
   return(out)
 }
 
-
-# %% wrapper around felm to run OLS with and without controls
+#  $$$$$$\  $$\       $$$$$$\  
+# $$  __$$\ $$ |     $$  __$$\ 
+# $$ /  $$ |$$ |     $$ /  \__|
+# $$ |  $$ |$$ |     \$$$$$$\  
+# $$ |  $$ |$$ |      \____$$\ 
+# $$ |  $$ |$$ |     $$\   $$ |
+#  $$$$$$  |$$$$$$$$\\$$$$$$  |
+#  \______/ \________|\______/ 
+                             
+ # %% wrapper around felm to run OLS with and without controls
 OLS <- function(data, Y, D, X = NULL, FE = NULL, cl = NULL, weights = NULL # weights is a string
 ) {
   p_D <- length(D)
-  fmla = formula_lfe(Y = Y, W = D, X = X, FE = FE, Cl = cl)
+  fmla = formula_lfe(Y = Y, D = D, X = X, FE = FE, cl = cl)
   if (is.null(weights) == TRUE) {
-    m1 = robustify(lfe::felm(fmla, data = data))
+    m1 = lfe::felm(fmla, data = data)
   } else {
-    m1 = robustify(lfe::felm(fmla, data = data, weights = data[, weights]))
+    m1 = lfe::felm(fmla, data = data, weights = data[, weights])
+  }
+  if (is.null(cl) == TRUE) {
+    SE <- m1$rse # robust SE
+    VCV <- m1$robustvcv # robust VCV
+  } else {
+    SE <- m1$cse # clustered SE
+    VCV <- m1$clustervcv # clustered VCV
   }
   if (is.null(FE) == TRUE) {
     coef <- m1$coefficients[2:(1 + p_D)]
-    se <- sqrt(diag(m1$robustvcv)[2:(1 + p_D)])
+    se <- SE[2:(1 + p_D)]
+    vcv <- VCV[2:(1 + p_D), 2:(1 + p_D)]
   } else {
     coef = m1$coefficients[1:p_D]
-    se <- sqrt(diag(m1$robustvcv)[1:p_D])
+    se <- SE[1:p_D]
+    vcv <- VCV[1:p_D, 1:p_D]
   }
   df <- m1$df.residual
-  out <- list(coef = coef, se = se, df = df)
+  out <- list(coef = coef, se = se, vcv = vcv, df = df)
   return(out)
 }
 
@@ -162,11 +165,11 @@ OLS <- function(data, Y, D, X = NULL, FE = NULL, cl = NULL, weights = NULL # wei
 first_stage_coefs <- function(data, D, Z, X, FE = NULL, weights = NULL # weights is a string
 ) {
   p_iv <- length(Z)
-  formula <- formula_lfe(Y = D, W = Z, X = X, FE = FE)
+  formula <- formula_lfe(Y = D, D = Z, X = X, FE = FE)
   if (is.null(weights)) {
-    reg = robustify(lfe::felm(formula, data = data))
+    reg = lfe::felm(formula, data = data)
   } else {
-    reg = robustify(lfe::felm(formula, data = data, weights = data[, weights]))
+    reg = lfe::felm(formula, data = data, weights = data[, weights])
   }
   # slice model fit
   if (is.null(FE) == FALSE) {
@@ -191,7 +194,7 @@ first_stage_rho = function(data, D, Z, X, FE = NULL, weights = NULL # weights is
   }
   d0 <- cbind.data.frame(res.d, res.z); colnames(d0) <- c(D, Z)
   # first stage
-  fmla = formula_lfe(Y = D, W = Z, X = NULL, FE = NULL, Cl = NULL)
+  fmla = formula_lfe(Y = D, D = Z, X = NULL, FE = NULL, cl = NULL)
   if (is.null(weights) == TRUE) {
     m = lfe::felm(fmla, data = d0)
   } else {
@@ -209,12 +212,3 @@ first_stage_rho = function(data, D, Z, X, FE = NULL, weights = NULL # weights is
 }
 
 
-
-# %% # function to replace SE and t-stats of FELM models inplace
-#' @param model FELM fit object
-robustify = function(model) {
-  model$se = model$rse
-  model$tval = model$rtval
-  model$pval = model$rpval
-  return(model)
-}
