@@ -34,8 +34,8 @@ ivDiag(data, Y, D, Z, controls = NULL, FE = NULL, cl = NULL, weights = NULL,
   \item{F_stat}{various F statistics.}
   \item{rho}{Pearson correlation coefficient between the treatment and predicted treatment from the first stage regression (all covariates are partialled out).}
   \item{tF}{results from the tF procedure based on Lee et al. (2022)}
-  \item{est_rf}{results from the first stage regression.}
-  \item{est_fs}{results from the reduced form regression.}
+  \item{est_rf}{results from the reduced form regression.}
+  \item{est_fs}{results from the first stage regression.}
   \item{p_iv}{the number of instruments.}
   \item{N}{the number of observations.}
   \item{N_cl}{ the number of clusters.}
