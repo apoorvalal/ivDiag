@@ -9,6 +9,7 @@ Authors@R: c(
 Maintainer: Yiqing Xu <yiqingxu@stanford.edu>
 Description: Estimation and diagnostic tools for instrumental variables designs, which implements the guidelines proposed in Lal et al. (2023) <arXiv:2303.11399>, including bootstrapped confidence intervals, effective F-statistic, Anderson-Rubin test, valid-t ratio test, and local-to-zero tests. 
 URL: https://yiqingxu.org/packages/ivDiag/
+BugReports: https://github.com/apoorvalal/ivDiag/issues
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
