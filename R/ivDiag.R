@@ -161,6 +161,7 @@ ivDiag <- function(
       # register
       cl.parallel <- future::makeClusterPSOCK(cores, verbose = FALSE)
       doParallel::registerDoParallel(cl.parallel)
+      on.exit(parallel::stopCluster(cl.parallel))
       expfun <- c("OLS", "IV", "formula_lfe")
       boot.out <- foreach::foreach(
         i = 1:nboots, .combine = rbind, .inorder = FALSE,
@@ -169,7 +170,7 @@ ivDiag <- function(
       ) %dopar% {
         return(one.boot())
       }
-      doParallel::stopImplicitCluster()
+      parallel::stopCluster(cl.parallel)
     }
     ##############################
     # post-bootstrap processing
@@ -202,7 +203,7 @@ ivDiag <- function(
 
     # timing
     t1 <- Sys.time() - t0
-    message("Bootstrap took", sprintf("%.3f", t1), "sec.\n")
+    message("Bootstrap took ", sprintf("%.3f", t1), " sec.\n")
 
     ## Bootstrap outputs
     # OLS
