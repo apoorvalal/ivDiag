@@ -33,6 +33,7 @@
 #'   and the number of units on each side
 #' @importFrom lfe felm
 #' @importFrom foreach foreach `%dopar%`
+#' @importFrom doRNG `%dorng%`
 #' @export
 ivDiag <- function(
     data, Y, D, Z = NULL, controls = NULL, FE = NULL, cl = NULL,
@@ -146,17 +147,21 @@ ivDiag <- function(
       # first 2 cols are OLS and IV coefs -- 2
       # then Reduced Form & First Stage coefs -- p_iv + p_iv
       # then two t stats (OLS & IV) -- 2
-      reg.ols <- OLS(data = s, Y = Y, D = D, X = controls, FE = FE, cl = cl, weights = weights)
-      reg.iv <- IV(data = s, Y = Y, D = D, Z = Z, X = controls, FE = FE, cl = cl, weights = weights)
+      # felm's summary statistics can warn "NaNs produced" in a resample: when a
+      # regression fits a group exactly (e.g. the first stage under one-sided
+      # noncompliance), a robust variance can be slightly negative. Only the
+      # coefficients (and the OLS/2SLS SEs; a draw with NaN is dropped) are used.
+      reg.ols <- suppressWarnings(OLS(data = s, Y = Y, D = D, X = controls, FE = FE, cl = cl, weights = weights))
+      reg.iv <- suppressWarnings(IV(data = s, Y = Y, D = D, Z = Z, X = controls, FE = FE, cl = cl, weights = weights))
       res[1] <- reg.ols$coef
       res[2] <- reg.iv$coef
       res[1 + ncoef] <- (reg.ols$coef - OLS.Coef) / reg.ols$se # t stat for ols
       res[2 + ncoef] <- (reg.iv$coef - IV.Coef) / reg.iv$se # t stat for iv
       # reduced form
-      reg.rf <- OLS(data = s, Y = Y, D = Z, X = controls, FE = FE, cl = cl, weights = weights)
+      reg.rf <- suppressWarnings(OLS(data = s, Y = Y, D = Z, X = controls, FE = FE, cl = cl, weights = weights))
       res[3:(2 + p_iv)] <- reg.rf$coef
       # first stage coefficients
-      reg.fs <- OLS(data = s, Y = D, D = Z, X = controls, FE = FE, cl = cl, weights = weights)
+      reg.fs <- suppressWarnings(OLS(data = s, Y = D, D = Z, X = controls, FE = FE, cl = cl, weights = weights))
       res[(3 + p_iv):(2 + p_iv * 2)] <- reg.fs$coef
       return(res)
     }
@@ -174,11 +179,11 @@ ivDiag <- function(
     #####################################################
     # boot looper - series or parallel
     #####################################################
+    # Each bootstrap draw gets its own random-number stream from `seed`
+    # (doRNG, L'Ecuyer-CMRG), so the results are the same in serial and in
+    # parallel and do not depend on the number of cores.
     if (parallel == FALSE) {
-      boot.out = matrix(NA, nboots, 4 + 2 * p_iv)
-      for (i in 1:nboots) {
-        boot.out[i, ] <- one.boot()
-      }
+      foreach::registerDoSEQ()
     } else { # parallel computing
       # parallelisation setup
       # let user specify ncores ; default to all - 1
@@ -194,15 +199,19 @@ ivDiag <- function(
         parallel::stopCluster(cl.parallel)
         foreach::registerDoSEQ()
       }, add = TRUE)
-      expfun <- c("OLS", "IV", "formula_lfe")
-      boot.out <- foreach::foreach(
-        i = 1:nboots, .combine = rbind, .inorder = FALSE,
-        .export = expfun,
-        .packages = c("lfe")
-      ) %dopar% {
-        return(one.boot())
-      }
     }
+    expfun <- c("OLS", "IV", "formula_lfe")
+    boot.out <- foreach::foreach(
+      i = 1:nboots, .combine = rbind, .inorder = TRUE,
+      .export = expfun,
+      .packages = c("lfe"),
+      .options.RNG = seed
+    ) %dorng% {
+      return(one.boot())
+    }
+    attr(boot.out, "rng") <- NULL
+    attr(boot.out, "doRNG_version") <- NULL
+    boot.out <- matrix(boot.out, nrow = nboots)
     ##############################
     # post-bootstrap processing
     ##############################

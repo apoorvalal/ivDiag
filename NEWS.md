@@ -16,6 +16,14 @@
 * New dataset `mcclendon` (McClendon 2014, a randomized encouragement design; CC0),
   now the main example in the tutorial and the help pages. The tutorial adds a weak-
   instrument AR example and a section on fuzzy RD designs. `rueda` is still shipped.
+* The bootstrap is now reproducible: each draw gets its own random-number stream
+  derived from `seed` (**doRNG**, a new import), so results are identical with or
+  without parallel computing and for any number of cores, and the caller's
+  random-number state is left as it was. Up to 1.0.6, `seed` did not reach the
+  parallel workers, so the default (parallel) bootstrap changed from run to run.
+  For a given `seed`, bootstrap results differ from those of 1.0.6.
+* Silenced harmless "NaNs produced" warnings from felm's summary statistics in
+  bootstrap resamples (e.g. the first stage under one-sided noncompliance).
 * Fixed the parallel bootstrap in `ivDiag()`: since the GitHub change of July 2024
   (#12) the worker cluster was stopped twice and the call failed with "invalid
   connection". The cluster is now stopped once on exit, and the sequential

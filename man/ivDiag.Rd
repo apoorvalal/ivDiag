@@ -26,7 +26,7 @@ ivDiag(data, Y, D, Z = NULL, controls = NULL, FE = NULL, cl = NULL, weights = NU
   \item{parallel}{a logical flag controlling parallel computing.}
   \item{cores}{setting the number of cores.}
   \item{prec}{precision of CI in string (4 by default).}
-  \item{seed}{setting seed.}
+  \item{seed}{seed for the bootstrap. Each bootstrap draw gets its own random-number stream derived from \code{seed} (via \pkg{doRNG}), so results are the same with or without parallel computing and for any number of cores.}
   \item{debug}{for debugging purposes.}
   \item{running}{a string indicating the running variable of a fuzzy regression discontinuity (RD) design. When it is given, the instrument is the indicator for crossing the cutoff (built when \code{Z = NULL}), and a polynomial in the distance to the cutoff, separate on each side, is added to \code{controls}, so that only the jump at the cutoff identifies the effect. A treatment predicted from the running variable (for example, from an assignment rule) is not a valid instrument on its own: it also varies smoothly with the running variable, and that variation overstates the first stage. If such a \code{Z} is supplied, it is used with the RD controls and a message is printed.}
   \item{cutoff}{the cutoff, or several cutoffs (each unit is then compared with its nearest cutoff, and cutoff fixed effects are added). 0 by default.}
