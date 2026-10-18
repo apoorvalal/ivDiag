@@ -18,14 +18,19 @@ AR_test(data, Y, D, Z, controls, FE = NULL, cl = NULL, weights = NULL,
   \item{CI}{a logical flag controlling whether to calcualte the confidence interval using the inversion method.}
   \item{prec}{precision of results (4 by default).}
   \item{alpha}{level of statitical significance; the default is 0.05.}
-  \item{parallel}{a logical flag controlling parallel computing.}
-  \item{cores}{setting the number of cores.}
+  \item{parallel}{no longer used (the confidence set no longer needs a grid of regressions); kept for backward compatibility.}
+  \item{cores}{no longer used; kept for backward compatibility.}
+}
+\details{
+  The confidence set collects every value \eqn{\beta_0} that the AR test does not reject, on the whole real line. The reduced-form coefficients on the instruments are linear in \eqn{\beta_0}, and their robust or cluster-robust variance is quadratic in \eqn{\beta_0}; both are recovered exactly from three regressions and checked at a fourth. With one instrument the set solves a quadratic inequality: a bounded interval, two unbounded rays, the whole real line, or (rarely) empty. With several instruments the AR statistic is evaluated over the whole real line (writing \eqn{\beta_0 = \hat\beta_{2SLS} + SE \cdot \tan\theta}) and every boundary is refined by root finding; the set can then also be a union of several intervals. If the variance is not quadratic in \eqn{\beta_0} (for example, a multiway cluster-robust variance repaired to be positive definite), the regression is run at each point instead.
+
+  Versions up to 1.0.6 inverted the test on a grid of \eqn{\hat\beta_{2SLS} \pm 10} SEs and could miss pieces of the set outside the grid.
 }
 \value{
   \item{Fstat}{F statistic, degrees of freedoms, and p-value.}
   \item{ci.print}{Confidence interval via intervsion (printed version).}
-  \item{ci}{Confidence interval via intervsion (numeric version).}
-  \item{bounded}{If the confidence interval is bounded.}
+  \item{ci}{Confidence set via inversion (numeric version): the end points in increasing order, in pairs, with \code{-Inf}/\code{Inf} for unbounded pieces; e.g. \code{c(-Inf, a, b, Inf)} is \eqn{(-\infty, a] \cup [b, \infty)}. \code{NA} if empty.}
+  \item{bounded}{If the confidence set is bounded and not empty.}
 }
 \seealso{
   \code{\link{ivDiag}}

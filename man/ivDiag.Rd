@@ -4,16 +4,18 @@
 \title{Omnibus Function for IV Estimation and Diagnostics}
 \description{Conducts various estimation and diagnostic procedure for instrumental variable designs in one shot.}
 \usage{
-ivDiag(data, Y, D, Z, controls = NULL, FE = NULL, cl = NULL, weights = NULL,
+ivDiag(data, Y, D, Z = NULL, controls = NULL, FE = NULL, cl = NULL, weights = NULL,
   bootstrap = TRUE, run.AR = TRUE,
   nboots = 1000, parallel = TRUE, cores = NULL, 
-  seed = 94305, prec = 4, debug = FALSE)
+  seed = 94305, prec = 4, debug = FALSE,
+  running = NULL, cutoff = 0, rd.poly = 1, bandwidth = NULL,
+  kernel = "triangular")
 }
 \arguments{
   \item{data}{name of a dataframe.}
   \item{Y}{a string indicating the outcome variable.}
   \item{D}{a string indicating the treatment variable.}
-  \item{Z}{a vector of strings indicating the instrumental variables.}
+  \item{Z}{a vector of strings indicating the instrumental variables. May be \code{NULL} when \code{running} is given; the instrument is then the indicator for crossing the cutoff.}
   \item{controls}{a vector of strings indicating the control variables.}
   \item{FE}{a vector of strings indicating the fixed effects variables.}
   \item{cl}{a string indicating the clustering variable.}
@@ -26,6 +28,11 @@ ivDiag(data, Y, D, Z, controls = NULL, FE = NULL, cl = NULL, weights = NULL,
   \item{prec}{precision of CI in string (4 by default).}
   \item{seed}{setting seed.}
   \item{debug}{for debugging purposes.}
+  \item{running}{a string indicating the running variable of a fuzzy regression discontinuity (RD) design. When it is given, the instrument is the indicator for crossing the cutoff (built when \code{Z = NULL}), and a polynomial in the distance to the cutoff, separate on each side, is added to \code{controls}, so that only the jump at the cutoff identifies the effect. A treatment predicted from the running variable (for example, from an assignment rule) is not a valid instrument on its own: it also varies smoothly with the running variable, and that variation overstates the first stage. If such a \code{Z} is supplied, it is used with the RD controls and a message is printed.}
+  \item{cutoff}{the cutoff, or several cutoffs (each unit is then compared with its nearest cutoff, and cutoff fixed effects are added). 0 by default.}
+  \item{rd.poly}{order of the polynomial in the running variable, 0 to 4 (1 by default).}
+  \item{bandwidth}{keep units within this distance of the cutoff; \code{NULL} (the whole sample) by default. See \code{rdrobust::rdbwselect} for a data-driven choice.}
+  \item{kernel}{\code{"triangular"} (default) or \code{"uniform"}; used only with a bandwidth. Kernel weights multiply \code{weights}.}
 }
 \value{
   \item{est_ols}{results from an OLS regression.}
@@ -41,6 +48,7 @@ ivDiag(data, Y, D, Z, controls = NULL, FE = NULL, cl = NULL, weights = NULL,
   \item{N_cl}{ the number of clusters.}
   \item{df}{the degree of freedom left from the 2SLS regression}
   \item{nvalues}{the unique values the outcome Y, the treatment D, and each instrument in Z in the 2SLS regression.}
+  \item{rd}{with \code{running} only: the RD setup (running variable, cutoffs, polynomial order, bandwidth, kernel) and the number of units on each side of the cutoff.}
 }
 \author{
   Apoorva Lal; Yiqing Xu
