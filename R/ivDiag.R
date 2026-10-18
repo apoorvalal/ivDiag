@@ -189,7 +189,11 @@ ivDiag <- function(
       # register
       cl.parallel <- future::makeClusterPSOCK(cores, verbose = FALSE)
       doParallel::registerDoParallel(cl.parallel)
-      on.exit(parallel::stopCluster(cl.parallel))
+      # stop the workers once, on exit (also on error), and go back to sequential
+      on.exit({
+        parallel::stopCluster(cl.parallel)
+        foreach::registerDoSEQ()
+      }, add = TRUE)
       expfun <- c("OLS", "IV", "formula_lfe")
       boot.out <- foreach::foreach(
         i = 1:nboots, .combine = rbind, .inorder = FALSE,
@@ -198,7 +202,6 @@ ivDiag <- function(
       ) %dopar% {
         return(one.boot())
       }
-      parallel::stopCluster(cl.parallel)
     }
     ##############################
     # post-bootstrap processing

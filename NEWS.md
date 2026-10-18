@@ -13,6 +13,10 @@
   fuzzy regression discontinuity designs: the instrument is the indicator for
   crossing the cutoff, and a polynomial in the running variable, separate on each
   side, is partialled out, so only the jump at the cutoff identifies the effect.
+* Fixed the parallel bootstrap in `ivDiag()`: since the GitHub change of July 2024
+  (#12) the worker cluster was stopped twice and the call failed with "invalid
+  connection". The cluster is now stopped once on exit, and the sequential
+  `foreach` backend is restored. (CRAN 1.0.6 was not affected.)
 * Added unit tests (`tests/testthat`).
 
 # ivDiag 1.0.6
