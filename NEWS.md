@@ -13,6 +13,9 @@
   fuzzy regression discontinuity designs: the instrument is the indicator for
   crossing the cutoff, and a polynomial in the running variable, separate on each
   side, is partialled out, so only the jump at the cutoff identifies the effect.
+* New dataset `mcclendon` (McClendon 2014, a randomized encouragement design; CC0),
+  now the main example in the tutorial and the help pages. The tutorial adds a weak-
+  instrument AR example and a section on fuzzy RD designs. `rueda` is still shipped.
 * Fixed the parallel bootstrap in `ivDiag()`: since the GitHub change of July 2024
   (#12) the worker cluster was stopped twice and the call failed with "invalid
   connection". The cluster is now stopped once on exit, and the sequential

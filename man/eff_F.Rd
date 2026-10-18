@@ -24,12 +24,12 @@ eff_F(data, Y, D, Z, controls = NULL, FE = NULL, cl = NULL,
   \code{\link{ivDiag}}
 }
 \examples{
-effF <- eff_F(data = rueda, Y = "e_vote_buying", D = "lm_pob_mesa", 
-    Z = "lz_pob_mesa_f", controls = c("lpopulation", "lpotencial"), 
-    cl = "muni_code")
+data(ivDiag)
+effF <- eff_F(data = mcclendon, Y = "intended", D = "openedesteem", 
+    Z = "esteem", controls = NULL)
 library(testthat)
 test_that("Check effective F", {
-  expect_equal(floor(as.numeric(effF)), 8598)
+  expect_equal(floor(as.numeric(effF)), 207)
 })
 }
 \references{

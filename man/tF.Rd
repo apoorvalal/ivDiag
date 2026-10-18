@@ -15,7 +15,7 @@ tF(coef, se, Fstat, prec = 4)
   Results from a valid t-ratio test given the first-stage F statistic.
 }
 \examples{
-tf.out <- tF(coef = -0.9835, se = 0.1540, Fstat = 8598)
+tf.out <- tF(coef = 0.3149, se = 0.0890, Fstat = 207.18)
 library(testthat)
 test_that("Check tF cF", {
   expect_equal(as.numeric(tf.out[2]), 1.96)

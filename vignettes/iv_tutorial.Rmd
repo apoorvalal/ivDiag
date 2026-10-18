@@ -48,7 +48,7 @@ rm(list=ls())
 knitr::write_bib("references.bib")
 ```
 
-**ivDiag** ships three datasets for illustration purposes: `rueda`, `gsz` and `gsz_south`. `rueda` is based on @rueda2017, while the other two are based on @guiso2016long. 
+**ivDiag** ships four datasets for illustration purposes: `mcclendon`, based on @mcclendon2014; `gsz` and `gsz_south`, based on @guiso2016long; and `rueda`, based on @rueda2017, which earlier versions of this tutorial used.
 ```{r}
 library(ivDiag)
 data(ivDiag)
@@ -58,54 +58,40 @@ ls()
 
 # Estimation and Inference
 
-We use @rueda2017 to illustrate `ivDiag`'s estimation and inference functionalities. The author studies the persistence of vote buying in developing democracies despite the use of secret ballots and argues that brokers condition future payments on published electoral results to enforce these transactions and that this is effective only when the results of small voting groups are available. 
+We use @mcclendon2014 to illustrate `ivDiag`'s estimation and inference functionalities. The study asks whether the promise of social esteem, being recognized by one's peers, draws people into contentious politics. The author worked with an LGBT advocacy organization that invited its members to a Pride rally by email. Members were randomly assigned to a control email or to one of two emails that promised to recognize attendees publicly, in the organization's newsletter or on its Facebook page.
 
-The study examines the relationship between polling station size and vote buying using three different measures of the incidence of vote buying, two at the municipality level and one at the individual level. The paper also considers other factors such as poverty and lack of education as potential explanations for why vote buying persists despite secret ballots.
-
-The size of the polling station, predicted by the rules limiting the number of voters per polling station, is used as an instrument of the actual polling place size. The institutional rule predicts sharp reductions in the size of the average polling station of a municipality every time the number of registered voters reaches a multiple of the maximum number of voters allowed to vote in a polling station. Such sharp reductions are used as a source of exogenous variation in polling place size to estimate the causal effect of this variable on vote buying.
+Not everyone opened the email. Random assignment to a recognition email (`esteem`) is therefore an instrument for opening one (`openedesteem`), and the 2SLS estimate is the effect of reading the promise among those who opened the email because they were sent it. Because the instrument is randomly assigned, its validity rests on the design, and its strength comes from the experiment rather than from modeling choices. Only members assigned to a recognition email could open one, so noncompliance is one-sided.
 
 | Summary | |
 |----------------|-----------------------|
-| Unit of analysis | city |
-| Treatment | the actual polling place size |
-| Instrument | the predicted size of the polling station |
-| Outcome | citizens' reports of electoral manipulation |
-| Model | Table5(1)|
+| Unit of analysis | individual (member of the organization) |
+| Treatment | opening an email that promises public recognition |
+| Instrument | random assignment to such an email |
+| Outcome | stated intention to attend the rally (RSVP) |
+| Model | Table 2(1) |
 
 ## Visualizing the first stage
 
-```{r rueda2017_vis}
-Y <- "e_vote_buying" # Y: outcome of interest
-D <-"lm_pob_mesa" # D: endogenous treatment
-Z <- "lz_pob_mesa_f" # Z: instrumental variable
-controls <- c("lpopulation", "lpotencial") # covariates of control variables
-cl <- "muni_code" # clusters
-weights <- FE <- NULL # no weights or fixed effects
+With a binary instrument and a binary treatment, the first stage is a comparison of two means. Only people assigned to a recognition email could open one, and about 8% of them did. The 2SLS estimate is the ratio of the reduced form (the difference in RSVP rates) to the first stage (the difference in opening rates).
+```{r mcclendon_vis}
+Y <- "intended" # Y: outcome of interest
+D <- "openedesteem" # D: endogenous treatment
+Z <- "esteem" # Z: instrumental variable
+controls <- cl <- weights <- FE <- NULL # no controls, clusters, weights or fixed effects
 
-# first stage (raw)
-par(mar = c(4, 4, 2, 2))
-plot(rueda$lz_pob_mesa_f, rueda$lm_pob_mesa, col = "#777777", cex = 0.5, 
-     main = "Raw Data", xlab = "Instrument", ylab = "Treatment")
-abline(lm(lm_pob_mesa ~ lz_pob_mesa_f, data = rueda), 
-       col = 2, lwd = 2, lty = 2)
-
-# first stage (partial out)
-z_res <- lm(lz_pob_mesa_f ~ lpopulation + lpotencial, data = rueda)$residuals
-d_res <- lm(lm_pob_mesa ~ lpopulation + lpotencial, data = rueda)$residuals
-plot(z_res, d_res, col = "#777777", cex = 0.5, 
-     main = "Covariates Partialled Out", 
-     xlab = "Residualized Instrument", 
-     ylab = "Residualized Treatment")
-abline(lm(d_res ~ z_res), col = 2, lwd = 2, lty = 2)
+table(assigned = mcclendon$esteem, opened = mcclendon$openedesteem)
+fs <- diff(tapply(mcclendon$openedesteem, mcclendon$esteem, mean)) # first stage
+rf <- diff(tapply(mcclendon$intended, mcclendon$esteem, mean)) # reduced form
+c(first_stage = unname(fs), reduced_form = unname(rf), wald_ratio = unname(rf / fs))
 ```
 
 ## Omnibus function
 
-The omnibus function `ivDiag` conducts both OLS and 2SLS estimation and quantify uncertainties using multiple inferential methods. It also output relevant information such as the first-stage *F*-statistics and results from the AR test. 
+The omnibus function `ivDiag` conducts both OLS and 2SLS estimation and quantify uncertainties using multiple inferential methods. It also output relevant information such as the first-stage *F*-statistics and results from the AR test. Members were assigned one by one, so heteroskedasticity-robust SEs are appropriate here. When units are assigned or sampled in groups, pass the group identifier to `cl`: `ivDiag` then reports cluster-robust SEs and *F* statistics and resamples whole clusters in the bootstrap.
 
-```{r rueda2017_est, cache = TRUE}
+```{r mcclendon2014_est, cache = TRUE}
 library(ivDiag)
-g <- ivDiag(data = rueda, Y=Y, D = D, Z = Z, controls = controls, cl = cl)
+g <- ivDiag(data = mcclendon, Y = Y, D = D, Z = Z, controls = controls, cl = cl)
 names(g)
 ```
 
@@ -124,12 +110,12 @@ g$est_2sls
 ```
 
 
-Two additional inferential methods are provided. `AR` stores results from the AR test, including the test statistic, the p-value, the 95% CI using the inversion method proposed by @chernozhukov2008reduced, and whether the CI is bounded. Note that if a CI is empty, we define `AR$bounded = FALSE`.
+Two additional inferential methods are provided. `AR` stores results from the AR test, including the test statistic, the p-value, the 95% confidence set obtained by inverting the test [@chernozhukov2008reduced], and whether the set is bounded. The set is computed exactly on the whole real line. With one instrument it is a bounded interval, the union of two unbounded rays, the whole real line, or (rarely) empty; the last three are reported with `AR$bounded = FALSE`. With a strong instrument, as here, it is a bounded interval close to the analytic CI.
 ```{r}
 g$AR
 ```
 
-`tF` stores results from the *tF* procedure based on @lee2022valid. `tF$cF` is the critical value for the valid *t* test adjusted based on the effective *F* statistic. The CIs are constructed based on `tF$t`, `tF$SE`, and `tF$cF`. 
+`tF` stores results from the *tF* procedure based on @lee2022valid. `tF$cF` is the critical value for the valid *t* test adjusted based on the effective *F* statistic. The CIs are constructed based on `tF$t`, `tF$SE`, and `tF$cF`. With an effective *F* above 104.7, `cF` equals 1.96.
 ```{r}
 g$tF
 ```
@@ -169,15 +155,14 @@ g$nvalues
 
 Moreover, users can turn off bootstrapping by setting `bootstrap = FALSE`:
 ```{r eval = FALSE}
-ivDiag(data = rueda, Y=Y, D = D, Z = Z, controls = controls, 
-            cl = cl, bootstrap = FALSE)
+ivDiag(data = mcclendon, Y = Y, D = D, Z = Z, bootstrap = FALSE)
 ```
 
 ## Coefficients and CIs plot
 
 The `plot_coef()` function produces a coefficient plot for both OLS and 2SLS estimates using different inferential methods. It also shows the effective *F*-statistic, as well as the numbers of observations and clusters. This plot is made by base `R` and can be further altered by users. 
 
-In this example, the 2SLS estimate is slightly larger in magnitude than the OLS estimate. Various inferential methods of the OLS (or 2SLS) estimate, as shown by the multiple CIs, more of less agree with each other, suggesting robustness of the findings. 
+In this example, the 2SLS estimate is slightly larger than the OLS estimate, and the CIs from the different inferential methods for each estimator nearly coincide, as one would expect with a randomized, strong instrument and a large sample. 
 ```{r}
 plot_coef(g)
 ```
@@ -186,7 +171,7 @@ Users can also adjust the appearance of the plot and control which estimates to 
 ```{r}
 plot_coef(g, ols.methods = c("analy"), iv.methods = c("analy", "ar", "tf"),
   main = "Comparison between OLS and IV Estimates", ylab = "Estimates", 
-  grid = FALSE, stats = FALSE, ylim = c(-2, 0.5))
+  grid = FALSE, stats = FALSE, ylim = c(-0.1, 0.6))
 ```
 
 ## Conduct tests seperately
@@ -196,23 +181,63 @@ The **ivDiag** package also allows users to conduct several important statistica
 ### Effective *F* statistic
 
 ```{r}
-eff_F(data = rueda, Y = Y, D = D, Z = Z, controls = controls, cl = cl, 
-      FE = NULL, weights = NULL)
+eff_F(data = mcclendon, Y = Y, D = D, Z = Z, controls = NULL)
 ```
 
 ### AR test
 
-```{r rueda_AR}
-AR_test(data = rueda, Y = Y, D = D, Z = Z, controls = controls, cl = cl, 
-        FE = NULL, weights = NULL)
+```{r mcclendon_AR}
+AR_test(data = mcclendon, Y = Y, D = D, Z = Z, controls = NULL)
+```
+
+When the instrument is weak, the AR confidence set can be unbounded. In the simulated example below, the first stage is weak, and values of the treatment effect far from the 2SLS estimate in either direction cannot be rejected, so the set is the union of two rays; it contains the true effect, 1. `AR_test` finds both rays however far they lie from the estimate.
+```{r weak_AR}
+set.seed(2)
+n <- 300
+z <- rnorm(n); u <- rnorm(n)
+d <- 0.05 * z + 0.8 * u + rnorm(n)  # weak first stage
+y <- 1 * d + u
+weak <- data.frame(y = y, d = d, z = z)
+AR_test(data = weak, Y = "y", D = "d", Z = "z", controls = NULL)
 ```
 
 ### *tF* procedure
 
 `tF` takes in a 2SLS estimate, its SE (analytic or bootstrapped), and the first-stage *F* statistics (obtained from any methods).
 ```{r}
-tF(coef = -0.9835, se = 0.1540, Fstat = 8598)
+tF(coef = 0.3149, se = 0.0890, Fstat = 207.18)
 ```
+
+---
+
+# Fuzzy Regression Discontinuity Designs
+
+Some instruments come from a rule with a cutoff: a program is mandatory above a population threshold, or a polling station is added each time registered voters exceed a cap. Such a design is a fuzzy regression discontinuity (RD) design, and only the jump at the cutoff is as good as random. A treatment "predicted" from the rule also moves smoothly with the running variable (the variable behind the rule), and that smooth variation, which may affect the outcome directly, can make the first stage look much stronger than the jump alone [@feir2016weak].
+
+With `running` and `cutoff`, `ivDiag` uses the indicator for crossing the cutoff as the instrument and adds a polynomial in the distance to the cutoff, separately on each side, to the controls (`rd.poly`, 1 by default), so that only the jump identifies the effect. `bandwidth` keeps units near the cutoff, with triangular (default) or uniform kernel weights. With several cutoffs, each unit is compared with its nearest cutoff, and cutoff fixed effects are added.
+
+In the simulated example below, take-up rises smoothly with the running variable and jumps at zero. The "predicted" treatment follows both.
+```{r rd_sim}
+set.seed(2)
+n <- 2000
+x <- runif(n, -1, 1)
+u <- rnorm(n)
+d <- as.numeric(0.2 + 0.6 * x + 0.3 * (x >= 0) + 0.3 * u + rnorm(n, sd = 0.3) > 0.5)
+y <- 2 * d + 1.5 * x - x^2 + u
+p_hat <- 0.2 + 0.6 * x + 0.3 * (x >= 0)  # treatment predicted from the rule
+rd <- data.frame(y = y, d = d, x = x, p_hat = p_hat)
+
+# predicted treatment as the instrument, running variable ignored
+g0 <- ivDiag(data = rd, Y = "y", D = "d", Z = "p_hat", bootstrap = FALSE)
+# fuzzy RD: crossing the cutoff, linear in x on each side
+g1 <- ivDiag(data = rd, Y = "y", D = "d", running = "x", cutoff = 0,
+             bootstrap = FALSE)
+rbind(predicted = c(g0$est_2sls[1, 1:2], F.effective = g0$F_stat[["F.effective"]]),
+      fuzzy_RD = c(g1$est_2sls[1, 1:2], F.effective = g1$F_stat[["F.effective"]]))
+g1$rd
+```
+
+The predicted-treatment instrument reports a far stronger first stage and a biased estimate (the true effect is 2), because it also uses the smooth relationship between `x` and both `d` and `y`. The fuzzy RD uses only the jump at the cutoff; it is weaker but valid, and its AR set and the *tF* procedure account for that.
 
 ---
 

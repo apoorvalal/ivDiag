@@ -44,6 +44,7 @@ reference:
     - plot_ltz
   - title: Datasets
   - contents:
+    - mcclendon
     - rueda
     - gsz
     - gsz_south

@@ -66,13 +66,12 @@ Lee, David S, Justin McCrary, Marcelo J Moreira, and Jack Porter. 2022. "Valid t
 }
 \examples{
 data(ivDiag)
-g <- ivDiag(data = rueda, Y = "e_vote_buying", D = "lm_pob_mesa", 
-    Z = "lz_pob_mesa_f", controls = c("lpopulation", "lpotencial"), 
-    cl = "muni_code", bootstrap = FALSE, run.AR = FALSE)
+g <- ivDiag(data = mcclendon, Y = "intended", D = "openedesteem", 
+    Z = "esteem", bootstrap = FALSE)
 plot_coef(g)
 library(testthat)    
 test_that("Check ivDiag output", {
-  expect_equal(as.numeric(g$est_2sls[1,1]), -0.9835)
+  expect_equal(as.numeric(g$est_2sls[1,1]), 0.3149)
 })
 }
 

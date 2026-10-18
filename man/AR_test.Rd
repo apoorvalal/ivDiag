@@ -37,12 +37,13 @@ AR_test(data, Y, D, Z, controls, FE = NULL, cl = NULL, weights = NULL,
 }
 \examples{
 data(ivDiag)
-AR.out <- AR_test(data = rueda, Y = "e_vote_buying", D = "lm_pob_mesa", 
-    Z = "lz_pob_mesa_f", controls = c("lpopulation", "lpotencial"),
-    cl = "muni_code", CI = FALSE)
+AR.out <- AR_test(data = mcclendon, Y = "intended", D = "openedesteem", 
+    Z = "esteem", controls = NULL)
+AR.out$ci.print
 library(testthat)    
 test_that("Check AR results", {
-  expect_equal(as.numeric(AR.out$Fstat[1]), 48.4768)
+  expect_equal(as.numeric(AR.out$Fstat[1]), 11.9462)
+  expect_true(AR.out$bounded)
 })
 }
 \references{
