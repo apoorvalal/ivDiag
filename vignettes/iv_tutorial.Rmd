@@ -44,7 +44,6 @@ Note that **ivDiag** is applicable for the **one-treatment** case only, although
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE,cache=TRUE)
 knitr::opts_chunk$set(fig.width=7, fig.height=6, out.width = '70%', fig.align = "center") 
-rm(list=ls())
 knitr::write_bib("references.bib")
 ```
 

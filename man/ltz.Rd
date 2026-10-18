@@ -34,10 +34,6 @@ ltz_out <- ltz(data = gsz, Y = "totassoc_p", D = "libero_comune_allnord",
     prior = c(0.178, 0.137))
 plot_ltz(ltz_out)    
     
-library(testthat)    
-test_that("Check local-to-zero adjustment", {
-  expect_equal(as.numeric(ltz_out$ltz[1]), 3.6088)
-})
 }
 \references{
   Conley, Timothy G, Christian B Hansen, and Peter E Rossi. 2012. "Plausibly Exogenous." Review of Economics and Statistics 94 (1): 260–72.

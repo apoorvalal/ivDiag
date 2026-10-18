@@ -19,6 +19,9 @@ McClendon (2014) worked with an LGBT advocacy organization to invite its members
 
 The replication data are in the public domain (CC0 1.0), Harvard Dataverse, \doi{10.7910/DVN/LVOSAF}.
 }
+\source{
+  Replication data for McClendon (2014), Harvard Dataverse, \doi{10.7910/DVN/LVOSAF} (CC0 1.0).
+}
 \references{
   McClendon, Gwyneth H. 2014. "Social Esteem and Participation in Contentious Politics: A Field Experiment at an LGBT Pride Rally." American Journal of Political Science 58 (2): 279--290.
 }

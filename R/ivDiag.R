@@ -47,7 +47,6 @@ ivDiag <- function(
   }    
   
   t0 <- Sys.time()
-  set.seed(seed)
   ##############################
   # data prep
   ##############################
@@ -188,7 +187,7 @@ ivDiag <- function(
       # parallelisation setup
       # let user specify ncores ; default to all - 1
       if (is.null(cores)) {
-        cores <- parallel::detectCores() - 1
+        cores <- max(1, parallel::detectCores() - 1, na.rm = TRUE)
       }
       message("Parallelising ", nboots, " reps on ", cores, " cores \n", sep = "")
       # register

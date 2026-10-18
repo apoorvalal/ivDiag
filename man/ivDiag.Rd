@@ -54,7 +54,7 @@ ivDiag(data, Y, D, Z = NULL, controls = NULL, FE = NULL, cl = NULL, weights = NU
   Apoorva Lal; Yiqing Xu
 }
 \references{
-Lal, Apoorva, Mackenzie William Lockhart, Yiqing Xu, and Ziwen Zu. 2023. "How Much Should We Trust Instrumental Variable Estimates in Political Science? Practical Advice Based on 67 Replicated Studies." Available at: \url{https://yiqingxu.org/papers/english/2021_iv/LLXZ.pdf}
+Lal, Apoorva, Mackenzie Lockhart, Yiqing Xu, and Ziwen Zu. 2024. "How Much Should We Trust Instrumental Variable Estimates in Political Science? Practical Advice Based on 67 Replicated Studies." Political Analysis 32 (4): 521--540. \doi{10.1017/pan.2024.2}
 
 Lee, David S, Justin McCrary, Marcelo J Moreira, and Jack Porter. 2022. "Valid t-Ratio Inference for IV." American Economic Review 112 (10): 3260–90.
 }
@@ -69,10 +69,6 @@ data(ivDiag)
 g <- ivDiag(data = mcclendon, Y = "intended", D = "openedesteem", 
     Z = "esteem", bootstrap = FALSE)
 plot_coef(g)
-library(testthat)    
-test_that("Check ivDiag output", {
-  expect_equal(as.numeric(g$est_2sls[1,1]), 0.3149)
-})
 }
 
 

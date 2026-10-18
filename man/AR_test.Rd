@@ -40,11 +40,6 @@ data(ivDiag)
 AR.out <- AR_test(data = mcclendon, Y = "intended", D = "openedesteem", 
     Z = "esteem", controls = NULL)
 AR.out$ci.print
-library(testthat)    
-test_that("Check AR results", {
-  expect_equal(as.numeric(AR.out$Fstat[1]), 11.9462)
-  expect_true(AR.out$bounded)
-})
 }
 \references{
   Chernozhukov, Victor, and Christian Hansen. 2008. "The Reduced Form: A Simple Approach to Inference with Weak Instruments." Economics Letters 100 (1): 68–71.

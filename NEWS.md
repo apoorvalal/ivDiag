@@ -29,6 +29,11 @@
   connection". The cluster is now stopped once on exit, and the sequential
   `foreach` backend is restored. (CRAN 1.0.6 was not affected.)
 * Added unit tests (`tests/testthat`).
+* CRAN housekeeping: `ivDiag()` no longer calls `set.seed()`, so the caller's
+  random-number state is unchanged; unused imports ('fixest', 'glue') removed;
+  'testthat' moved to Suggests and dropped from the examples; base packages declared;
+  DESCRIPTION cites Lal et al. (2024, Political Analysis) by DOI; data help pages give
+  their Dataverse sources and licenses.
 
 # ivDiag 1.0.6
 Fix clustering issues with both the main function and AR test (thanks to Michael
