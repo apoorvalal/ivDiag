@@ -14,15 +14,32 @@
 #' @param cores number of cores to parallelise across (defaults to all - 1)
 #' @param prec precision of summary (4 by default)
 #' @param seed seed
-#' @return list of results
+#' @param debug print intermediate results
+#' @param running running variable of a fuzzy regression discontinuity (RD)
+#'   design (string). When it is given, the instrument is the indicator for
+#'   crossing the cutoff (built when \code{Z = NULL}), and a polynomial in the
+#'   running variable, separate on each side of the cutoff, is added to
+#'   \code{controls}, so that only the jump at the cutoff identifies the
+#'   effect. Do not use a treatment predicted from the running variable as the
+#'   instrument: it also varies smoothly with the running variable, and that
+#'   variation overstates the first stage.
+#' @param cutoff cutoff (or several cutoffs; each unit is then compared with its
+#'   nearest cutoff, and cutoff fixed effects are added). 0 by default.
+#' @param rd.poly order of the polynomial in the running variable (1 by default)
+#' @param bandwidth keep units within this distance of the cutoff (NULL, the
+#'   whole sample, by default); see \code{rdrobust::rdbwselect} for a choice
+#' @param kernel "triangular" (default) or "uniform"; used only with a bandwidth
+#' @return list of results; with \code{running}, also \code{rd}, the RD setup
+#'   and the number of units on each side
 #' @importFrom lfe felm
 #' @importFrom foreach foreach `%dopar%`
 #' @export
 ivDiag <- function(
-    data, Y, D, Z, controls = NULL, FE = NULL, cl = NULL,
+    data, Y, D, Z = NULL, controls = NULL, FE = NULL, cl = NULL,
     weights = NULL, bootstrap = TRUE, run.AR = TRUE, 
     nboots = 1000, parallel = TRUE, cores = NULL, seed = 94305, 
-    prec = 4, debug = FALSE) {
+    prec = 4, debug = FALSE, running = NULL, cutoff = 0, rd.poly = 1,
+    bandwidth = NULL, kernel = "triangular") {
   
   if (bootstrap == FALSE & run.AR == FALSE) {
     parallel <- FALSE # no need to parallelise if not bootstrapping or running AR
@@ -33,11 +50,22 @@ ivDiag <- function(
   ##############################
   # data prep
   ##############################
-  for (var in unique(c(Y, D, Z, controls, FE, cl, weights))) {
+  for (var in unique(c(Y, D, Z, controls, FE, cl, weights, running))) {
     if (!var %in% names(data)) {
       stop(paste0("\"", var, "\" is not in the dataset; please double check."))
     }
   }
+
+  # fuzzy RD: instrument = crossing the cutoff; running variable as controls
+  rd.info <- NULL
+  if (!is.null(running)) {
+    rd <- rd_prep(data = data, running = running, cutoff = cutoff, Z = Z,
+      controls = controls, FE = FE, weights = weights, poly = rd.poly,
+      bandwidth = bandwidth, kernel = kernel)
+    data <- rd$data; Z <- rd$Z; controls <- rd$controls
+    FE <- rd$FE; weights <- rd$weights; rd.info <- rd$info
+  }
+  if (is.null(Z)) stop("Please provide the instrument(s) Z, or a running variable.")
 
   # drop missingness
   data <- data[, unique(c(Y, D, Z, controls, FE, cl, weights))]
@@ -375,6 +403,7 @@ ivDiag <- function(
       nvalues = nvalues
     )
   }
+  if (!is.null(rd.info)) output$rd <- rd.info
   class(output) <- "ivDiag"
   return(output)
 }
