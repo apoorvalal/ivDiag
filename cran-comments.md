@@ -18,7 +18,7 @@ ivDiag 1.0.7 (update of 1.0.6).
 ## Test environments
 
 * local: macOS (aarch64), R 4.5.3
-* TODO before submitting: win-builder (R-devel), macbuilder
+* win-builder: Windows, R-devel
 
 ## R CMD check results
 
