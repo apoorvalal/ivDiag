@@ -18,6 +18,9 @@
   first-stage coefficient). Earlier versions used unweighted cross-products of the
   weighted residuals, e.g. LTZ estimate 3.6088 (SE 0.8112) instead of 3.7441 (SE
   0.7568) in the GSZ example. Results without weights are unchanged (#18).
+* The parallel bootstrap starts its workers with `parallelly::makeClusterPSOCK()`;
+  `future::makeClusterPSOCK()` is a re-export that will be removed (#15). **future**
+  is no longer imported; **parallelly** is.
 * New dataset `mcclendon` (McClendon 2014, a randomized encouragement design; CC0),
   now the main example in the tutorial and the help pages. The tutorial adds a weak-
   instrument AR example and a section on fuzzy RD designs. `rueda` is still shipped.

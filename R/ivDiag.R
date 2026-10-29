@@ -191,7 +191,7 @@ ivDiag <- function(
       }
       message("Parallelising ", nboots, " reps on ", cores, " cores \n", sep = "")
       # register
-      cl.parallel <- future::makeClusterPSOCK(cores, verbose = FALSE)
+      cl.parallel <- parallelly::makeClusterPSOCK(cores, verbose = FALSE)
       doParallel::registerDoParallel(cl.parallel)
       # stop the workers once, on exit (also on error), and go back to sequential
       on.exit({
