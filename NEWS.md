@@ -30,6 +30,11 @@
   random-number state is left as it was. Up to 1.0.6, `seed` did not reach the
   parallel workers, so the default (parallel) bootstrap changed from run to run.
   For a given `seed`, bootstrap results differ from those of 1.0.6.
+* `tF()` below F = 4, where the Lee et al. (2022) table starts: the critical value is
+  now `Inf` and the interval the whole real line (p-value 1). Earlier versions used
+  18.66, the value at F = 4, for any smaller F, so the interval was too narrow; the
+  valid critical value is infinite for F up to 3.84. `plot_coef()` labels such an
+  interval "Unbounded CI".
 * Silenced harmless "NaNs produced" warnings from felm's summary statistics in
   bootstrap resamples (e.g. the first stage under one-sided noncompliance).
 * Fixed the parallel bootstrap in `ivDiag()`: since the GitHub change of July 2024

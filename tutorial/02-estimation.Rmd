@@ -61,7 +61,7 @@ Two additional inferential methods are provided. `AR` stores results from the AR
 g$AR
 ```
 
-`tF` stores results from the *tF* procedure based on @lee2022valid as a named vector. It is returned only with one instrument. `tF["cF"]` is the critical value for the valid *t* test, adjusted based on the effective *F* statistic. The CI is `tF["Coef"]` plus or minus `tF["cF"]` times `tF["SE"]`. @lee2022valid show that `cF` reaches 1.96 at an effective *F* of about 104.7. The function `tF()` interpolates their table and returns exactly 1.96 from *F* = 106.09 (10.3 squared).
+`tF` stores results from the *tF* procedure based on @lee2022valid as a named vector. It is returned only with one instrument. `tF["cF"]` is the critical value for the valid *t* test, adjusted based on the effective *F* statistic. The CI is `tF["Coef"]` plus or minus `tF["cF"]` times `tF["SE"]`. @lee2022valid show that `cF` reaches 1.96 at an effective *F* of about 104.7. The function `tF()` interpolates their table and returns exactly 1.96 from *F* = 106.09 (10.3 squared). Below *F* = 4, where the table starts, `tF()` returns `cF = Inf` and a CI that covers the whole real line: the valid critical value is infinite when *F* is at most 3.84 and above 18.66 between 3.84 and 4.
 ```{r}
 g$tF
 ```

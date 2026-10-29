@@ -9,6 +9,7 @@ ivDiag 1.0.7 (update of 1.0.6).
   inside functions).
 * Fixed the parallel bootstrap (cluster stopped twice), added a fuzzy regression
   discontinuity option, a new example dataset (`mcclendon`), and unit tests.
+* `tF()` returns an unbounded interval below F = 4, where the Lee et al. (2022) table starts.
 * Fixed `ltz()` with weights: the adjustment now uses the weighted first stage.
 * The parallel bootstrap now uses 'parallelly' (replacing 'future', whose
   makeClusterPSOCK() is a re-export).
