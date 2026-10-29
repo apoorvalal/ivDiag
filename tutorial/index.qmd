@@ -40,7 +40,7 @@ The omnibus function `ivDiag` returns a list. Parts of this list can be appended
 Please report bugs to yiqingxu \[at\] stanford.edu or open an issue on [GitHub](https://github.com/apoorvalal/ivDiag/issues).
 
 <!-- badges: start -->
-[![Lifecycle: stable](https://img.shields.io/badge/lifecycle-stable-green.svg)](https://www.tidyverse.org/lifecycle/#stable)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![downloads: CRAN](https://cranlogs.r-pkg.org/badges/grand-total/ivDiag)](https://www.datasciencemeta.com/rpackages)
+[<img src="https://img.shields.io/badge/lifecycle-stable-green.svg" alt="Lifecycle: stable"/>](https://www.tidyverse.org/lifecycle/#stable)
+[<img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"/>](https://opensource.org/licenses/MIT)
+[<img src="https://cranlogs.r-pkg.org/badges/grand-total/ivDiag" alt="downloads: CRAN"/>](https://www.datasciencemeta.com/rpackages)
 <!-- badges: end -->
