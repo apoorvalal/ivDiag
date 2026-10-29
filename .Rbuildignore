@@ -10,3 +10,10 @@
 ^docs$
 ^vignettes$
 ^pkgdown$
+^\.Rhistory$
+^\.DS_Store$
+^cran-comments\.md$
+^tests/testthat/_problems$
+^tests/testthat/_snaps$
+^tests/testthat/testthat-problems\.rds$
+^tutorial$

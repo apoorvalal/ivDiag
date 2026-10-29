@@ -1,0 +1,38 @@
+project:
+  type: book
+
+book:
+  title: "ivDiag -- User Manual"
+  sidebar:
+    style: docked
+    background: light
+  chapters:
+    - index.qmd
+    - 01-start.Rmd
+    - 02-estimation.Rmd
+    - 03-tests.Rmd
+    - 04-rd.Rmd
+    - 05-sensitivity.Rmd
+    - aa-changelog.Rmd
+    - references.qmd
+
+bibliography: references.bib
+
+format:
+  html:
+    theme: cosmo
+    code-fold: false
+    code-tools: true
+    code-link: true
+    toc-depth: 3
+
+knitr:
+  opts_chunk:
+    collapse: true
+    comment: "#>"
+    warning: false
+    message: false
+    fig.width: 7
+    fig.height: 6
+    out.width: "70%"
+    fig.align: "center"

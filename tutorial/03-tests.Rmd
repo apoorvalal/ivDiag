@@ -1,0 +1,43 @@
+# Conduct Tests Separately {#sec-tests}
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
+```
+
+**ivDiag** can compute the effective *F* statistic and run the AR test and the *tF* procedure separately. The syntax of `eff_F` and `AR_test` is similar to that of `ivDiag`. 
+
+The examples use the @mcclendon2014 data from @sec-estimation.
+```{r vars}
+library(ivDiag)
+Y <- "intended"; D <- "openedesteem"; Z <- "esteem"
+```
+
+## Effective *F* statistic
+
+```{r}
+eff_F(data = mcclendon, Y = Y, D = D, Z = Z, controls = NULL)
+```
+
+## AR test
+
+```{r mcclendon_AR}
+AR_test(data = mcclendon, Y = Y, D = D, Z = Z, controls = NULL)
+```
+
+When the instrument is weak, the AR confidence set can be unbounded. In the simulated example below, the first stage is weak. Values of the treatment effect far from the 2SLS estimate in either direction cannot be rejected. The confidence set is therefore the union of two rays and contains the true effect, 1. `AR_test` finds both rays however far they lie from the estimate.
+```{r weak_AR}
+set.seed(2)
+n <- 300
+z <- rnorm(n); u <- rnorm(n)
+d <- 0.05 * z + 0.8 * u + rnorm(n)  # weak first stage
+y <- 1 * d + u
+weak <- data.frame(y = y, d = d, z = z)
+AR_test(data = weak, Y = "y", D = "d", Z = "z", controls = NULL)
+```
+
+## *tF* procedure
+
+`tF` takes a 2SLS estimate, its standard error (SE), and a first-stage *F* statistic. Compute the *F* statistic with the same variance estimator as the SE. With one instrument and robust or cluster-robust SEs, that statistic is the effective *F*, which `ivDiag()` uses. The procedure applies to one instrument only.
+```{r}
+tF(coef = 0.3149, se = 0.0890, Fstat = 207.18)
+```

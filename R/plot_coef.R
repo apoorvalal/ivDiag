@@ -82,8 +82,9 @@ plot_coef <- function(out,
   # AR is available
   if (AR == TRUE) {
     if (out$AR$bounded == TRUE) {
-      lower_ci <- c(lower_ci, out$AR$ci[1])
-      upper_ci <- c(upper_ci, out$AR$ci[2])
+      # several bounded pieces (possible with several instruments): span them
+      lower_ci <- c(lower_ci, min(out$AR$ci))
+      upper_ci <- c(upper_ci, max(out$AR$ci))
     } else {
       lower_ci <- c(lower_ci, NA)
       upper_ci <- c(upper_ci, NA)
@@ -94,8 +95,14 @@ plot_coef <- function(out,
   }
   # tF is available
   if (tF == TRUE) {
-    lower_ci <- c(lower_ci, out$tF[6])
-    upper_ci <- c(upper_ci, out$tF[7])
+    if (is.finite(out$tF["cF"])) {
+      lower_ci <- c(lower_ci, out$tF[6])
+      upper_ci <- c(upper_ci, out$tF[7])
+    } else {
+      # F < 4: the tF interval is the whole line
+      lower_ci <- c(lower_ci, NA)
+      upper_ci <- c(upper_ci, NA)
+    }
     method <- c(method, "tF")
     row.names <- c(row.names, "iv-tf")
     coef <- c(coef, coef.iv)
@@ -146,7 +153,12 @@ plot_coef <- function(out,
         ar.lab <- "Unbounded CI"
       }
       text(which(data$method == "AR"),  -0.05 * adj2 * sign(coef.iv), ar.lab, col = "red", cex = 0.8)
+    } else if (length(out$AR$ci) > 2) {
+      text(which(data$method == "AR"),  -0.05 * adj2 * sign(coef.iv), "Disjoint CI", col = "red", cex = 0.8)
     }
+  }
+  if ("iv-tf" %in% iv.methods && !is.finite(out$tF["cF"])) {
+    text(which(data$method == "tF"),  -0.05 * adj2 * sign(coef.iv), "Unbounded CI", col = "red", cex = 0.8)
   }
   if (stats == TRUE) {
     if (is.null(out$N_cl) == TRUE) {

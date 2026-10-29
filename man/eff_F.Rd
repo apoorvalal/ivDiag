@@ -24,13 +24,9 @@ eff_F(data, Y, D, Z, controls = NULL, FE = NULL, cl = NULL,
   \code{\link{ivDiag}}
 }
 \examples{
-effF <- eff_F(data = rueda, Y = "e_vote_buying", D = "lm_pob_mesa", 
-    Z = "lz_pob_mesa_f", controls = c("lpopulation", "lpotencial"), 
-    cl = "muni_code")
-library(testthat)
-test_that("Check effective F", {
-  expect_equal(floor(as.numeric(effF)), 8598)
-})
+data(ivDiag)
+effF <- eff_F(data = mcclendon, Y = "intended", D = "openedesteem", 
+    Z = "esteem", controls = NULL)
 }
 \references{
   Olea, José Luis Montiel, and Carolin Pflueger. 2013. "A Robust Test for Weak Instruments."" Journal of Business & Economic Statistics 31 (3): 358–69.

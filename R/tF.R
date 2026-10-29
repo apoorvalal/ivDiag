@@ -14,12 +14,14 @@ tF <- function(coef, se, Fstat, prec = 4) {
     2.13, 2.12, 2.11, 2.10, 2.10, 2.09, 2.08, 2.08, 2.07, 2.06, 2.06, 2.05, 2.04, 2.04, 2.03, 2.03, 2.02, 2.02,
     2.01, 2.01, 2.00, 2.00, 1.99, 1.99, 1.99, 1.98, 1.98, 1.97, 1.97, 1.97, 1.96
   )
-  if (F.sqrt <= 2) {
-    cF <- cF0[1]
+  if (F.sqrt < 2) {
+    # below the table (F < 4): the valid critical value is infinite for F <= 1.96^2
+    # and above 18.66 between 3.84 and 4, so the interval is the whole line
+    cF <- Inf
   } else if (F.sqrt >= 10.3) {
     cF <- 1.96
   } else {
-    pos.lower <- max(which(F0.sqrt < F.sqrt))
+    pos.lower <- max(which(F0.sqrt <= F.sqrt))
     pos.upper <- pos.lower + 1
     h1 <- abs(F.sqrt - F0.sqrt[pos.lower])
     h2 <- abs(F.sqrt - F0.sqrt[pos.upper])

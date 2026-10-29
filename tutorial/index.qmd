@@ -1,0 +1,46 @@
+# Welcome {.unnumbered}
+
+The **ivDiag** package provides tools for estimation, inference, sensitivity analysis, and visualization with instrumental variable (IV) designs. It implements the guidelines proposed in @lal2023trust in **R**, enabling researchers to obtain reliable and robust estimates of their IV models.
+
+The package computes several types of standard errors (SEs), *F*-statistics, and weak-IV robust confidence intervals (CIs). Together they show how uncertain an IV estimate is, including when the instruments are weak.
+
+The package also provides the Anderson-Rubin (AR) test and adjusted *t*-ratio inference from @lee2022valid to enhance the validity and reliability of statistical inference.
+
+**ivDiag** also offers the Local-to-Zero (LTZ) estimator [@conley2012plausibly]. This estimator adjusts the 2SLS estimate and its confidence interval for a plausible violation of the exclusion restriction specified by the researcher. Functions for plotting coefficients from two-stage least squares (2SLS) and ordinary least squares (OLS) regressions allow researchers to compare the two estimators and various inferential methods.
+
+The omnibus function `ivDiag` returns a list. Parts of this list can be appended as additional rows in tables produced by `modelsummary`, `fixest::etable`, and stargazer, among other tools. This makes it easy for researchers to integrate `ivDiag` estimates into their existing workflows.
+
+**ivDiag** applies only to the **one-treatment** case, although there can be multiple instruments.
+
+## Organization
+
+-   [Chapter @sec-start]\
+    Installation and the datasets shipped with the package.
+
+-   [Chapter @sec-estimation]\
+    The omnibus function `ivDiag()` and the coefficient plot, using @mcclendon2014.
+
+-   [Chapter @sec-tests]\
+    The effective *F* statistic, the AR test, and the *tF* procedure run separately, including an AR set under a weak instrument.
+
+-   [Chapter @sec-rd]\
+    Fuzzy regression discontinuity designs.
+
+-   [Chapter @sec-sensitivity]\
+    Zero-first-stage tests and the local-to-zero adjustment, using @guiso2016long.
+
+## Contributors
+
+-   [Apoorva Lal](https://apoorvalal.github.io/){target="_blank"} (Independent Researcher)
+-   [Yiqing Xu](https://yiqingxu.org/){target="_blank"} (Stanford)
+-   [StatsClaw](https://statsclaw.ai/){target="_blank"} (Agentic System for Statistical Software Development)
+
+## Report bugs
+
+Please report bugs to yiqingxu \[at\] stanford.edu or open an issue on [GitHub](https://github.com/apoorvalal/ivDiag/issues).
+
+<!-- badges: start -->
+[![Lifecycle: stable](https://img.shields.io/badge/lifecycle-stable-green.svg)](https://www.tidyverse.org/lifecycle/#stable)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![downloads: CRAN](https://cranlogs.r-pkg.org/badges/grand-total/ivDiag)](https://www.datasciencemeta.com/rpackages)
+<!-- badges: end -->

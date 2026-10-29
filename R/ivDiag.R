@@ -14,30 +14,58 @@
 #' @param cores number of cores to parallelise across (defaults to all - 1)
 #' @param prec precision of summary (4 by default)
 #' @param seed seed
-#' @return list of results
+#' @param debug print intermediate results
+#' @param running running variable of a fuzzy regression discontinuity (RD)
+#'   design (string). When it is given, the instrument is the indicator for
+#'   crossing the cutoff (built when \code{Z = NULL}), and a polynomial in the
+#'   running variable, separate on each side of the cutoff, is added to
+#'   \code{controls}, so that only the jump at the cutoff identifies the
+#'   effect. Do not use a treatment predicted from the running variable as the
+#'   instrument: it also varies smoothly with the running variable, and that
+#'   variation overstates the first stage.
+#' @param cutoff cutoff (or several cutoffs; each unit is then compared with its
+#'   nearest cutoff, and cutoff fixed effects are added). 0 by default.
+#' @param rd.poly order of the polynomial in the running variable (1 by default)
+#' @param bandwidth keep units within this distance of the cutoff (NULL, the
+#'   whole sample, by default); see \code{rdrobust::rdbwselect} for a choice
+#' @param kernel "triangular" (default) or "uniform"; used only with a bandwidth
+#' @return list of results; with \code{running}, also \code{rd}, the RD setup
+#'   and the number of units on each side
 #' @importFrom lfe felm
 #' @importFrom foreach foreach `%dopar%`
+#' @importFrom doRNG `%dorng%`
 #' @export
 ivDiag <- function(
-    data, Y, D, Z, controls = NULL, FE = NULL, cl = NULL,
+    data, Y, D, Z = NULL, controls = NULL, FE = NULL, cl = NULL,
     weights = NULL, bootstrap = TRUE, run.AR = TRUE, 
     nboots = 1000, parallel = TRUE, cores = NULL, seed = 94305, 
-    prec = 4, debug = FALSE) {
+    prec = 4, debug = FALSE, running = NULL, cutoff = 0, rd.poly = 1,
+    bandwidth = NULL, kernel = "triangular") {
   
   if (bootstrap == FALSE & run.AR == FALSE) {
     parallel <- FALSE # no need to parallelise if not bootstrapping or running AR
   }    
   
   t0 <- Sys.time()
-  set.seed(seed)
   ##############################
   # data prep
   ##############################
-  for (var in unique(c(Y, D, Z, controls, FE, cl, weights))) {
+  for (var in unique(c(Y, D, Z, controls, FE, cl, weights, running))) {
     if (!var %in% names(data)) {
       stop(paste0("\"", var, "\" is not in the dataset; please double check."))
     }
   }
+
+  # fuzzy RD: instrument = crossing the cutoff; running variable as controls
+  rd.info <- NULL
+  if (!is.null(running)) {
+    rd <- rd_prep(data = data, running = running, cutoff = cutoff, Z = Z,
+      controls = controls, FE = FE, weights = weights, poly = rd.poly,
+      bandwidth = bandwidth, kernel = kernel)
+    data <- rd$data; Z <- rd$Z; controls <- rd$controls
+    FE <- rd$FE; weights <- rd$weights; rd.info <- rd$info
+  }
+  if (is.null(Z)) stop("Please provide the instrument(s) Z, or a running variable.")
 
   # drop missingness
   data <- data[, unique(c(Y, D, Z, controls, FE, cl, weights))]
@@ -118,17 +146,21 @@ ivDiag <- function(
       # first 2 cols are OLS and IV coefs -- 2
       # then Reduced Form & First Stage coefs -- p_iv + p_iv
       # then two t stats (OLS & IV) -- 2
-      reg.ols <- OLS(data = s, Y = Y, D = D, X = controls, FE = FE, cl = cl, weights = weights)
-      reg.iv <- IV(data = s, Y = Y, D = D, Z = Z, X = controls, FE = FE, cl = cl, weights = weights)
+      # felm's summary statistics can warn "NaNs produced" in a resample: when a
+      # regression fits a group exactly (e.g. the first stage under one-sided
+      # noncompliance), a robust variance can be slightly negative. Only the
+      # coefficients (and the OLS/2SLS SEs; a draw with NaN is dropped) are used.
+      reg.ols <- suppressWarnings(OLS(data = s, Y = Y, D = D, X = controls, FE = FE, cl = cl, weights = weights))
+      reg.iv <- suppressWarnings(IV(data = s, Y = Y, D = D, Z = Z, X = controls, FE = FE, cl = cl, weights = weights))
       res[1] <- reg.ols$coef
       res[2] <- reg.iv$coef
       res[1 + ncoef] <- (reg.ols$coef - OLS.Coef) / reg.ols$se # t stat for ols
       res[2 + ncoef] <- (reg.iv$coef - IV.Coef) / reg.iv$se # t stat for iv
       # reduced form
-      reg.rf <- OLS(data = s, Y = Y, D = Z, X = controls, FE = FE, cl = cl, weights = weights)
+      reg.rf <- suppressWarnings(OLS(data = s, Y = Y, D = Z, X = controls, FE = FE, cl = cl, weights = weights))
       res[3:(2 + p_iv)] <- reg.rf$coef
       # first stage coefficients
-      reg.fs <- OLS(data = s, Y = D, D = Z, X = controls, FE = FE, cl = cl, weights = weights)
+      reg.fs <- suppressWarnings(OLS(data = s, Y = D, D = Z, X = controls, FE = FE, cl = cl, weights = weights))
       res[(3 + p_iv):(2 + p_iv * 2)] <- reg.fs$coef
       return(res)
     }
@@ -146,32 +178,39 @@ ivDiag <- function(
     #####################################################
     # boot looper - series or parallel
     #####################################################
+    # Each bootstrap draw gets its own random-number stream from `seed`
+    # (doRNG, L'Ecuyer-CMRG), so the results are the same in serial and in
+    # parallel and do not depend on the number of cores.
     if (parallel == FALSE) {
-      boot.out = matrix(NA, nboots, 4 + 2 * p_iv)
-      for (i in 1:nboots) {
-        boot.out[i, ] <- one.boot()
-      }
+      foreach::registerDoSEQ()
     } else { # parallel computing
       # parallelisation setup
       # let user specify ncores ; default to all - 1
       if (is.null(cores)) {
-        cores <- parallel::detectCores() - 1
+        cores <- max(1, parallel::detectCores() - 1, na.rm = TRUE)
       }
       message("Parallelising ", nboots, " reps on ", cores, " cores \n", sep = "")
       # register
-      cl.parallel <- future::makeClusterPSOCK(cores, verbose = FALSE)
+      cl.parallel <- parallelly::makeClusterPSOCK(cores, verbose = FALSE)
       doParallel::registerDoParallel(cl.parallel)
-      on.exit(parallel::stopCluster(cl.parallel))
-      expfun <- c("OLS", "IV", "formula_lfe")
-      boot.out <- foreach::foreach(
-        i = 1:nboots, .combine = rbind, .inorder = FALSE,
-        .export = expfun,
-        .packages = c("lfe")
-      ) %dopar% {
-        return(one.boot())
-      }
-      parallel::stopCluster(cl.parallel)
+      # stop the workers once, on exit (also on error), and go back to sequential
+      on.exit({
+        parallel::stopCluster(cl.parallel)
+        foreach::registerDoSEQ()
+      }, add = TRUE)
     }
+    expfun <- c("OLS", "IV", "formula_lfe")
+    boot.out <- foreach::foreach(
+      i = 1:nboots, .combine = rbind, .inorder = TRUE,
+      .export = expfun,
+      .packages = c("lfe"),
+      .options.RNG = seed
+    ) %dorng% {
+      return(one.boot())
+    }
+    attr(boot.out, "rng") <- NULL
+    attr(boot.out, "doRNG_version") <- NULL
+    boot.out <- matrix(boot.out, nrow = nboots)
     ##############################
     # post-bootstrap processing
     ##############################
@@ -375,6 +414,7 @@ ivDiag <- function(
       nvalues = nvalues
     )
   }
+  if (!is.null(rd.info)) output$rd <- rd.info
   class(output) <- "ivDiag"
   return(output)
 }

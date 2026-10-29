@@ -13,6 +13,9 @@ Rueda (2017) studies the persistence of vote buying in developing democracies de
 
 The size of the polling station, predicted by the rules limiting the number of voters per polling station, is used as an instrument of the actual polling place size. The institutional rule predicts sharp reductions in the size of the average polling station of a municipality every time the number of registered voters reaches a multiple of the maximum number of voters allowed to vote in a polling station. Such sharp reductions are used as a source of exogenous variation in polling place size to estimate the causal effect of this variable on vote buying.
 }
+\source{
+  Replication data for Rueda (2017), Harvard Dataverse, \doi{10.7910/DVN/K6ZOOW} (CC0 1.0).
+}
 \references{
   Rueda, Miguel R. 2017. "Small Aggregates, Big Manipulation: Vote Buying Enforcement and Collective Monitoring." American Journal of Political Science 61 (1): 163--177.
 }

@@ -11,15 +11,20 @@ tF(coef, se, Fstat, prec = 4)
 \item{Fstat}{a first-stage partial F statistic.}
 \item{prec}{precision of results (4 by default).}
 }
+\details{
+  The critical value \code{cF} is interpolated from the table in Lee et al. (2022) by the
+  square root of \code{Fstat}. It is 1.96 for \code{Fstat} of 106.09 (10.3 squared) and above.
+  Below \code{Fstat} = 4, where the table starts, \code{cF} is \code{Inf}: the valid critical
+  value is infinite for \code{Fstat} up to 3.84 (1.96 squared) and above 18.66 between 3.84
+  and 4. The confidence interval is then the whole real line and the p-value is 1.
+}
 \value{
-  Results from a valid t-ratio test given the first-stage F statistic.
+  A named vector: the F statistic (\code{F}), the critical value (\code{cF}), the coefficient,
+  its SE, the t statistic, the confidence interval (\code{Coef} plus or minus \code{cF} times
+  \code{SE}) and the adjusted p-value.
 }
 \examples{
-tf.out <- tF(coef = -0.9835, se = 0.1540, Fstat = 8598)
-library(testthat)
-test_that("Check tF cF", {
-  expect_equal(as.numeric(tf.out[2]), 1.96)
-})
+tF(coef = 0.3149, se = 0.0890, Fstat = 207.18)
 }
 \references{
   Lee, David S, Justin McCrary, Marcelo J Moreira, and Jack Porter. 2022. "Valid t-Ratio Inference for IV." American Economic Review 112 (10): 3260–90.
