@@ -2,7 +2,7 @@
 
 The **ivDiag** package provides tools for estimation, inference, sensitivity analysis, and visualization with instrumental variable (IV) designs. It implements the guidelines proposed in @lal2023trust in **R**, enabling researchers to obtain reliable and robust estimates of their IV models.
 
-The package computes several types of standard errors (SEs), *F*-statistics, and weak-IV robust confidence intervals (CIs). These features ensure that researchers can accurately capture the uncertainty associated with their IV estimates and make valid statistical inferences.
+The package computes several types of standard errors (SEs), *F*-statistics, and weak-IV robust confidence intervals (CIs). Together they show how uncertain an IV estimate is, including when the instruments are weak.
 
 The package also provides the Anderson-Rubin (AR) test and adjusted *t*-ratio inference from @lee2022valid to enhance the validity and reliability of statistical inference.
 

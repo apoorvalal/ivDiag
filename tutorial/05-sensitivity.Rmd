@@ -11,7 +11,7 @@ The package also implements sensitivity tests to help researchers assess the str
 
 Researchers first use substantive knowledge to identify a subsample in which the instrument's first-stage effect is likely zero (henceforth, the ZFS subsample). They then regress $Y$ on $Z$ in this subsample to show that the reduced-form coefficient for the instrument is approximately zero. This provides suggestive evidence in favor of instrument validity. For most observational instruments, substantive knowledge of the assignment mechanism ought to identify a ZFS subsample.
 
-We recommend this heuristic check for most observational IV papers, although it is an informal test and provides no test statistics. @van2018beyond demonstrate that the ZFS test can be usefully combined with the "plausibly exogenous" method suggested by @conley2012plausibly (henceforth, CHR 2012). To illustrate the method, we rewrite the IV simultaneous equations in CHR (2012)’s notation:
+We recommend this heuristic check for most observational IV papers. The reduced-form coefficient can be tested against zero, but failing to reject does not show that the exclusion restriction holds. @van2018beyond demonstrate that the ZFS test can be usefully combined with the "plausibly exogenous" method suggested by @conley2012plausibly (henceforth, CHR 2012). To illustrate the method, we rewrite the IV simultaneous equations in CHR (2012)’s notation:
 
 
 $$
@@ -99,7 +99,7 @@ ltz_out <- ltz(data = gsz, Y = Y, D = D, Z = Z,
 ltz_out
 ```
 
-Pass the output from `ltz` to `plot_ltz` to plot the approximate sampling distribution of the 2SLS estimates before and after LTZ adjustment. The plot also shows the prior distribution based on the ZFS test. The dotted lines represent the 95% CIs. In this case, the original finding remains robust to the LTZ adjustment.
+Pass the output from `ltz` to `plot_ltz` to plot the approximate sampling distribution of the 2SLS estimates before and after LTZ adjustment. The plot also shows the prior distribution based on the ZFS test. The dotted lines mark 95% intervals: the central 95% of the prior in the first panel, and the 95% CIs of the estimates in the other two. In this case, the original finding remains robust to the LTZ adjustment.
 ```{r message = FALSE, warning = FALSE}
 plot_ltz(ltz_out, xlim = c(-0.5, 7))
 ```
