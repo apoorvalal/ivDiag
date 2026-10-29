@@ -1,0 +1,111 @@
+# Sensitivity Tests {#sec-sensitivity}
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
+```
+
+The package also implements sensitivity tests to help researchers assess the strong and generally untestable exogeneity assumption. These tests apply to the **just-identified** (one-treatment-one-instrument) case. 
+
+
+@bound2000compulsory suggest **zero-first-stage** (ZFS) tests, which use an auxiliary regression on a subsample where the instrument is not expected to influence treatment assignment. A ZFS test can be understood as a placebo test. If there is a strong prior that the first stage is zero in a subsample, the reduced-form effect should also be zero if the exogeneity assumption holds. In the language of the LATE framework, this subsample has no compliers, only always-takers and never-takers.
+
+Researchers first use substantive knowledge to identify a subsample in which the instrument's first-stage effect is likely zero (henceforth, the ZFS subsample). They then regress $Y$ on $Z$ in this subsample to show that the reduced-form coefficient for the instrument is approximately zero. This provides suggestive evidence in favor of instrument validity. For most observational instruments, substantive knowledge of the assignment mechanism ought to identify a ZFS subsample.
+
+We recommend this heuristic check for most observational IV papers, although it is an informal test and provides no test statistics. @van2018beyond demonstrate that the ZFS test can be usefully combined with the "plausibly exogenous" method suggested by @conley2012plausibly (henceforth, CHR 2012). To illustrate the method, we rewrite the IV simultaneous equations in CHR (2012)’s notation:
+
+
+$$
+Y=X \beta+Z \gamma+\varepsilon ; \quad X=Z \Pi+v
+$$
+
+where the instrument $Z$ also enters the structural equation. The exclusion restriction amounts to a dogmatic prior that $\gamma=0$. CHR (2012) suggest relaxing this assumption by specifying a plausible value, range, or distribution for $\gamma$. This choice depends on the researcher’s beliefs about the degree of violation of the exclusion restriction. They propose three approaches to inference. The first specifies a range of values for $\gamma$; the second specifies a prior distribution for $\gamma$; the third is a fully Bayesian analysis that requires priors over all model parameters and corresponding parametric distributions.
+
+We focus on the second method, which CHR (2012) call the **local-to-zero** (LTZ) approximation, because of its simplicity and transparency. The LTZ approximation considers "local" violations of the exclusion restriction and requires a prior over $\gamma$ alone. CHR (2012) replace the standard assumption that $\gamma = 0$ with the weaker assumption that $\gamma
+\sim \mathbb{F}$, a prior distribution. They show that this implies the following distribution of $\hat\beta$:
+$$
+\hat{\beta} \sim^a N(\beta, \mathbb{V}_{2SLS}) + A \gamma
+$$
+where $A = (X'Z(Z'Z)^{-1}Z'X)^{-1} X'Z$. The additional term inflates the original 2SLS asymptotic distribution. With a Gaussian prior over $\gamma \sim N(\mu_\gamma, \Omega_\gamma)$, the distribution takes its most convenient form. In this case, $\hat\beta$ is approximately normal with mean $\beta + A \mu_\gamma$:
+$$
+\hat{\beta} \sim^a N(\beta + A \mu_\gamma ,
+  \mathbb{V}_{2SLS} + A \Omega_\gamma A')
+$$
+In practice, researchers can replace $\mu_\gamma$ with an estimate from the ZFS and $\Omega_\gamma$ with the estimate's estimated variance. The LTZ estimate is then $\hat\beta - A\hat\mu_\gamma$, with variance $\mathbb{V}_{2SLS} + A\hat\Omega_\gamma A'$; `ltz()` reports both.
+
+## The persistence of social capital
+
+We illustrate the diagnostics with the IV analysis in @guiso2016long (henceforth GSZ 2016). They revisit @putnam1992making's celebrated conjecture that Italian cities that achieved self-government in the Middle Ages have higher modern-day levels of social capital. They study the effects of free city-state status on social capital using measures of the number of nonprofit organizations per capita, organ donations per capita, and whether students cheat in mathematics. This tutorial focuses on the first outcome. The table below summarizes the analysis.
+
+| Summary  | |
+|---------|-----------------------|
+| Unit of analysis | Italian city |
+| Treatment | historical free city status |
+| Instrument | whether a city was the seat of a bishop in the Middle Ages |
+| Outcome | the number of nonprofit organizations per capita |
+| Model | Table 6 |
+
+
+First, identify the key variables in the replication data and examine their distributions. The outcome variable is highly skewed, but we keep it unchanged to be consistent with the original paper. 
+```{r}
+library(ivDiag)
+Y <- "totassoc_p"
+D <- "libero_comune_allnord"
+Z <- "bishopcity"
+weights <- "population"
+controls <- c('altitudine', 'escursione', 'costal', 'nearsea', 
+              'population', 'pop2', 'gini_land', 'gini_income')
+
+# table instrument and treatment
+table(gsz$bishopcity)
+table(gsz$libero_comune_allnord)
+table(gsz$bishopcity, gsz$libero_comune_allnord)
+
+# distribution of the outcome
+hist(gsz$totassoc_p, breaks = 100, 
+     xlab = "# Nonprofit Organizations Per Capita")
+```
+
+Apply the omnibus function `ivDiag`, then plot the OLS and 2SLS coefficients and corresponding CIs.
+```{r gsz2016_est, cache = TRUE}
+g <- ivDiag(data = gsz, Y = Y, D = D, Z = Z, controls = controls, 
+            weights = weights)
+g
+```
+
+The results show that the 2SLS estimates are larger in magnitude than the OLS estimates. Different inferential methods for the 2SLS estimates produce slightly different CIs, but all reject the null of no effect quite comfortably. 
+```{r}
+plot_coef(g)
+```
+
+
+## ZFS tests and LTZ adjustment
+
+The authors conduct a ZFS test using the subsample of southern Italian cities, where the free-city experience was arguably irrelevant. The ZFS test is simply a reduced-form regression of the outcome on the instrument. The coefficient and SE of the instrument `bishopcity` are `0.178` and `0.137`, respectively.
+```{r}
+library(estimatr)
+zfs <- lm_robust(totassoc_p ~ bishopcity + altitudine + escursione 
+                 + costal + nearsea + population + pop2 + gini_land + 
+                   gini_income + capoluogo, data = gsz_south, 
+                 weights = gsz_south$population, se_type = "HC1")
+
+summary(zfs)$coefficients["bishopcity", 1:2]
+```
+
+To perform an LTZ adjustment on the 2SLS/IV estimate, set the prior mean to `0.178` and its standard deviation (SD) to `0.137`. 
+```{r}
+ltz_out <- ltz(data = gsz, Y = Y, D = D, Z = Z, 
+    controls = controls, weights = weights, 
+    prior = c(0.178, 0.137))
+ltz_out
+```
+
+Pass the output from `ltz` to `plot_ltz` to plot the approximate sampling distribution of the 2SLS estimates before and after LTZ adjustment. The plot also shows the prior distribution based on the ZFS test. The dotted lines represent the 95% CIs. In this case, the original finding remains robust to the LTZ adjustment.
+```{r message = FALSE, warning = FALSE}
+plot_ltz(ltz_out, xlim = c(-0.5, 7))
+```
+
+Alternatively, pass the IV estimates, the LTZ estimates, and the prior separately to `plot_ltz`. Each input is a two-element vector containing a coefficient and an SD/SE estimate.
+```{r message = FALSE, warning = FALSE}
+plot_ltz(iv_est = ltz_out$iv[1:2], ltz_est = ltz_out$ltz[1:2], 
+         prior = ltz_out$prior)
+```
