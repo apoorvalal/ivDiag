@@ -9,6 +9,7 @@ ivDiag 1.0.7 (update of 1.0.6).
   inside functions).
 * Fixed the parallel bootstrap (cluster stopped twice), added a fuzzy regression
   discontinuity option, a new example dataset (`mcclendon`), and unit tests.
+* Fixed `ltz()` with weights: the adjustment now uses the weighted first stage.
 * Removed unused imports ('fixest', 'glue'); 'testthat' moved from Imports to Suggests.
 
 ## Test environments

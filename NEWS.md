@@ -13,6 +13,11 @@
   fuzzy regression discontinuity designs: the instrument is the indicator for
   crossing the cutoff, and a polynomial in the running variable, separate on each
   side, is partialled out, so only the jump at the cutoff identifies the effect.
+* `ltz()` with `weights`: the adjustment term A now uses weighted cross-products,
+  consistent with the weighted 2SLS fit (with one instrument, A = 1 / the weighted
+  first-stage coefficient). Earlier versions used unweighted cross-products of the
+  weighted residuals, e.g. LTZ estimate 3.6088 (SE 0.8112) instead of 3.7441 (SE
+  0.7568) in the GSZ example. Results without weights are unchanged (#18).
 * New dataset `mcclendon` (McClendon 2014, a randomized encouragement design; CC0),
   now the main example in the tutorial and the help pages. The tutorial adds a weak-
   instrument AR example and a section on fuzzy RD designs. `rueda` is still shipped.

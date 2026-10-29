@@ -48,8 +48,11 @@ ltz = function(data, Y, D, Z, controls, FE = NULL, cl = NULL, weights = NULL, pr
     resZ[, i] <- partialer(Y = Z[i], X = controls, FE = FE, data = data, weights = weights)
   }
 
-  # main calculation
-  A <- solve(t(resD) %*% resZ %*% solve(t(resZ) %*% resZ) %*% t(resZ) %*% resD) %*% (t(resD) %*% resZ)
+  # main calculation; with weights, A uses weighted cross-products, matching the
+  # weighted 2SLS fit and the weighted partialling-out above
+  w <- if (is.null(weights)) rep(1, n) else data[, weights]
+  ZWD <- t(resZ) %*% (w * resD)
+  A <- solve(t(ZWD) %*% solve(t(resZ) %*% (w * resZ)) %*% ZWD) %*% t(ZWD)
   # point est, var
   ltz_pt_est <- iv_beta - A %*% mu
   ltz_var_est <- iv_Var + A %*% Sig %*% t(A)
