@@ -77,10 +77,11 @@ test_that("two instruments: set matches the direct check", {
   }
 })
 
+# fixtures/hager_krakowski_2022.rds: the three variables of Hager and Krakowski (2022, APSR),
+# column 1, as standardized in Lal et al. (2024); source data CC0 1.0, doi:10.7910/DVN/JWTRSC.
+# ivDiag 1.0.6 searched only near the 2SLS estimate and missed the left ray.
 test_that("Hager and Krakowski (2022), column 1: two rays", {
-  f <- file.path(Sys.getenv("IVDIAG_LAL_POOL"), "rawdata", "apsr_Hager_Krakowski_2022.rds")
-  skip_if_not(file.exists(f), "set IVDIAG_LAL_POOL to the LLXZ_rep folder")
-  df <- as.data.frame(readRDS(f))
+  df <- readRDS(test_path("fixtures", "hager_krakowski_2022.rds"))
   ar <- suppressMessages(AR_test(df, "y", "commanders", "priests_continuous", controls = NULL))
   expect_equal(ar$ci[c(1, 4)], c(-Inf, Inf))
   expect_equal(ar$ci[2], -1.16, tolerance = 0.005 / 1.16)
