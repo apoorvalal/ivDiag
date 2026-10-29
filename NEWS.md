@@ -37,6 +37,8 @@
   connection". The cluster is now stopped once on exit, and the sequential
   `foreach` backend is restored. (CRAN 1.0.6 was not affected.)
 * Added unit tests (`tests/testthat`).
+* DESCRIPTION gives the GitHub address for bug reports (#8, #16).
+* The tutorial is now a Quarto book in `tutorial/` (not part of the package build).
 * CRAN housekeeping: `ivDiag()` no longer calls `set.seed()`, so the caller's
   random-number state is unchanged; unused imports ('fixest', 'glue') removed;
   'testthat' moved to Suggests and dropped from the examples; base packages declared;

@@ -13,6 +13,7 @@ book:
     - 03-tests.Rmd
     - 04-rd.Rmd
     - 05-sensitivity.Rmd
+    - aa-changelog.Rmd
     - references.qmd
 
 bibliography: references.bib
