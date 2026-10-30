@@ -1,3 +1,11 @@
+# ivDiag 1.0.7.9000
+* `eff_F()` (and so the effective F in `ivDiag()`) now builds the instrument cross-product
+  matrix from the instruments with the intercept, controls and fixed effects partialled
+  out, weighted by `weights`. Earlier versions used the raw instruments (demeaned only
+  within fixed effects), so with two or more instruments, controls, no fixed effects or
+  weights gave a wrong value, e.g. 24.5452 instead of 85.7537 for two instruments with
+  nonzero means and no controls. Results with one instrument are unchanged.
+
 # ivDiag 1.0.7
 * `AR_test()` (and `ivDiag()`) now find the Anderson-Rubin confidence set on the
   whole real line. The reduced-form coefficients are linear and their robust or

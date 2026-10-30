@@ -20,8 +20,6 @@ eff_F = function(data, Y, D, Z, controls = NULL, FE = NULL,
   }
   # first stage model object
   fsmod = ivmod$stage1
-  # instrument
-  Z = fsmod$ivx
   p_iv = length(fsmod$instruments)
   if (is.null(cl) == TRUE) {
     vcv = fsmod$robustvcv
@@ -34,8 +32,10 @@ eff_F = function(data, Y, D, Z, controls = NULL, FE = NULL,
   # first stage coef and vcov
   pi = matrix(fsmod$coefficients[iv_pos], p_iv, 1)
   Sigma = vcv[iv_pos, iv_pos, drop = FALSE]
-  # instrument matrix
-  Q_zz = (t(Z) %*% Z)
+  # Q = Z~' W Z~, Z~ = instruments with intercept, controls and FE partialled
+  # out (weighted), on felm's sample: inverse of the instrument block of
+  # (X'WX)^{-1} (Frisch-Waugh-Lovell); instruments are the last columns
+  Q_zz = solve(fsmod$inv[iv_pos, iv_pos, drop = FALSE])
   eff_F = c(t(pi) %*% Q_zz %*% pi / sum(diag(Sigma %*% Q_zz)))
   return(round(eff_F, prec))
 }
