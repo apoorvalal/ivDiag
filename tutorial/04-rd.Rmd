@@ -104,9 +104,18 @@ legend("top", inset = c(0, -0.1), xpd = TRUE, horiz = TRUE, bty = "n",
        pch = c(1, NA), lty = c(NA, 1), col = c("#004a8c", "gray30"))
 ```
 
-To specify the fuzzy RD, pass `ratio` as the running variable and the integers as cutoffs. `ivDiag` then compares each municipality with its nearest cutoff and adds cutoff fixed effects.
-```{r rueda_spec, eval = FALSE}
-ivDiag(data = rueda, Y = "e_vote_buying", D = "lm_pob_mesa",
-       controls = c("lpopulation", "lpotencial"), cl = "muni_code",
-       running = "ratio", cutoff = 1:ceiling(max(rueda$ratio)))
+To specify the fuzzy RD, pass `ratio` as the running variable and the integers as cutoffs. `ivDiag` then compares each municipality with its nearest cutoff and adds cutoff fixed effects. Below, we fit the first stage twice: with the predicted size as the instrument, as in the study, and as a fuzzy RD. We report only the first-stage *F* statistics.
+```{r rueda_spec}
+# predicted size as the instrument, running variable ignored
+f_pred <- ivDiag(data = rueda, Y = "e_vote_buying", D = "lm_pob_mesa",
+                 Z = "lz_pob_mesa_f", controls = c("lpopulation", "lpotencial"),
+                 cl = "muni_code", bootstrap = FALSE, run.AR = FALSE)
+# fuzzy RD: crossing a cutoff, linear in ratio on each side, cutoff fixed effects
+f_rd <- ivDiag(data = rueda, Y = "e_vote_buying", D = "lm_pob_mesa",
+               controls = c("lpopulation", "lpotencial"), cl = "muni_code",
+               running = "ratio", cutoff = 1:ceiling(max(rueda$ratio)),
+               bootstrap = FALSE, run.AR = FALSE)
+rbind(predicted = f_pred$F_stat, fuzzy_RD = f_rd$F_stat)
 ```
+
+With the predicted size as the instrument, the effective *F* statistic is `r format(round(f_pred$F_stat[["F.effective"]]), big.mark = ",")`, far above any conventional threshold. This number overstates the strength of the design. Between two cutoffs, the predicted size rises smoothly with registered voters (@fig-rueda), and this smooth variation drives most of the first stage. In the fuzzy RD, only the drops at the cutoffs identify the effect, and the effective *F* statistic falls to `r round(f_rd$F_stat[["F.effective"]], 2)`. The drops are small beyond the first few cutoffs, and many municipalities do not follow them. With a first stage this weak, rely on the AR set rather than the *t*-test [@feir2016weak].
