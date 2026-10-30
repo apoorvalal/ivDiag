@@ -73,6 +73,11 @@ ivDiag <- function(
   d0 <- as.data.frame(data[complete.cases(data), ])
   n <- nrow(d0); p_iv <- length(Z)
 
+  # effective F; computed first because it stops with a clear error when the
+  # instruments are collinear with each other or with the controls/FE, before
+  # the fits and matrix inversions below fail with obscure messages
+  F.effective <- eff_F(d0, Y = Y, D = D, Z = Z, controls = controls, FE = FE, cl = cl, weights = weights)
+
   ### prep (using the first clustering variable in bootstrap)
   if (is.null(cl) == FALSE) { # find clusters
     d0 <- d0[order(d0[, cl[1]]), ]
@@ -284,7 +289,6 @@ ivDiag <- function(
   } else {
     F.cluster <- NA
   }
-  F.effective <- eff_F(data, Y = Y, D = D, Z = Z, controls = controls, FE = FE, cl = cl, weights = weights)
   if (bootstrap == TRUE) {
     F_stat <- c(F.standard, F.robust, F.cluster, F.boot, F.effective)
     names(F_stat) <- c("F.standard", "F.robust", "F.cluster", "F.bootstrap", "F.effective")
