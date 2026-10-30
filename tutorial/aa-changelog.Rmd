@@ -2,7 +2,7 @@
 
 ## v1.0.7
 
-[Development version, not yet on CRAN.]{.text-muted}
+[On CRAN since 2026-10-30.]{.text-muted}
 
 **Changes that affect results**
 

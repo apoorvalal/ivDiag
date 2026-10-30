@@ -8,9 +8,9 @@ knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
 
 | Source | Version | Date | Features |
 |-------------------|-------------------|----------------|-------------------------------------------|
-| CRAN | 1.0.6 | 2023-09-17 | Default release |
-| GitHub (`master`) | 1.0.6 | 2024-07-09 | The CRAN release plus two small changes (#8, #12) |
-| GitHub (`dev`) | 1.0.7 | in development | Exact AR confidence set, fuzzy RD designs, weighted LTZ fix and a reproducible bootstrap; see the [Changelog](aa-changelog.html) |
+| CRAN | 1.0.7 | 2026-10-30 | Default release: exact AR confidence set, fuzzy RD designs, weighted LTZ fix and a reproducible bootstrap; see the [Changelog](aa-changelog.html) |
+| GitHub (`master`) | 1.0.7 | 2026-10-30 | Same as CRAN |
+| GitHub (`dev`) | 1.0.7 | 2026-10-30 | Same as `master` until the next development version |
 
 New versions are tested and merged into the `dev` branch first. After CRAN accepts a release, `dev` is merged into `master`, so `master` matches CRAN.
 
@@ -26,7 +26,7 @@ To install the version on `master`:
 remotes::install_github("apoorvalal/ivDiag")
 ```
 
-To install the development version on `dev`, which this manual is written against:
+To install the development version on `dev`:
 
 ```{r install_dev, eval = FALSE}
 remotes::install_github("apoorvalal/ivDiag@dev")
