@@ -104,18 +104,40 @@ legend("top", inset = c(0, -0.1), xpd = TRUE, horiz = TRUE, bty = "n",
        pch = c(1, NA), lty = c(NA, 1), col = c("#004a8c", "gray30"))
 ```
 
-To specify the fuzzy RD, pass `ratio` as the running variable and the integers as cutoffs. `ivDiag` then compares each municipality with its nearest cutoff and adds cutoff fixed effects. Below, we fit the first stage twice: with the predicted size as the instrument, as in the study, and as a fuzzy RD. We report only the first-stage *F* statistics.
+To specify the fuzzy RD, pass the running variable and the integers as cutoffs. `ivDiag` then compares each municipality with its nearest cutoff and adds cutoff fixed effects. The size of the drop differs by cutoff: crossing `k` lowers the log predicted size by log((`k` + 1)/`k`), which is 0.41 at 2 but 0.05 at 20. An indicator for crossing would impose the same drop at every cutoff. We therefore take the log of `ratio` as the running variable and the logs of the integers as cutoffs, and pass the predicted size as `Z`. With registered voters among the controls, the polynomial by side and the cutoff fixed effects, the only variation left in the predicted size is the drop at each cutoff, at the size the rule gives it. Below, we fit the first stage four ways and report only the first-stage *F* statistics.
 ```{r rueda_spec}
+ctrl <- c("lpopulation", "lpotencial")
 # predicted size as the instrument, running variable ignored
 f_pred <- ivDiag(data = rueda, Y = "e_vote_buying", D = "lm_pob_mesa",
-                 Z = "lz_pob_mesa_f", controls = c("lpopulation", "lpotencial"),
-                 cl = "muni_code", bootstrap = FALSE, run.AR = FALSE)
-# fuzzy RD: crossing a cutoff, linear in ratio on each side, cutoff fixed effects
+                 Z = "lz_pob_mesa_f", controls = ctrl, cl = "muni_code",
+                 bootstrap = FALSE, run.AR = FALSE)
+# the same, with fixed effects for the cap (one cap per election year)
+f_cap <- ivDiag(data = rueda, Y = "e_vote_buying", D = "lm_pob_mesa",
+                Z = "lz_pob_mesa_f", controls = ctrl, FE = "cap", cl = "muni_code",
+                bootstrap = FALSE, run.AR = FALSE)
+# fuzzy RD: the drops at the cutoffs, each as large as the rule makes it
+rueda$lratio <- log(rueda$ratio)
 f_rd <- ivDiag(data = rueda, Y = "e_vote_buying", D = "lm_pob_mesa",
-               controls = c("lpopulation", "lpotencial"), cl = "muni_code",
-               running = "ratio", cutoff = 1:ceiling(max(rueda$ratio)),
+               Z = "lz_pob_mesa_f", controls = ctrl, cl = "muni_code",
+               running = "lratio", cutoff = log(1:ceiling(max(rueda$ratio))),
                bootstrap = FALSE, run.AR = FALSE)
-rbind(predicted = f_pred$F_stat, fuzzy_RD = f_rd$F_stat)
+# the same, below the tenth cutoff
+f_rd10 <- ivDiag(data = subset(rueda, ratio < 10.5), Y = "e_vote_buying",
+                 D = "lm_pob_mesa", Z = "lz_pob_mesa_f", controls = ctrl,
+                 cl = "muni_code", running = "lratio", cutoff = log(1:11),
+                 bootstrap = FALSE, run.AR = FALSE)
+rbind(predicted = f_pred$F_stat, predicted_cap_FE = f_cap$F_stat,
+      fuzzy_RD = f_rd$F_stat, fuzzy_RD_below_10 = f_rd10$F_stat)
 ```
 
-With the predicted size as the instrument, the effective *F* statistic is `r format(round(f_pred$F_stat[["F.effective"]]), big.mark = ",")`, far above any conventional threshold. This number overstates the strength of the design. Between two cutoffs, the predicted size rises smoothly with registered voters (@fig-rueda), and this smooth variation drives most of the first stage. In the fuzzy RD, only the drops at the cutoffs identify the effect, and the effective *F* statistic falls to `r round(f_rd$F_stat[["F.effective"]], 2)`. The drops are small beyond the first few cutoffs, and many municipalities do not follow them. With a first stage this weak, rely on the AR set rather than the *t*-test [@feir2016weak].
+With the predicted size as the instrument, the effective *F* statistic is `r format(round(f_pred$F_stat[["F.effective"]]), big.mark = ",")`. Little of this strength comes from the drops at the cutoffs. Registered voters are a control, so the steady rise between cutoffs is partialled out. Most of what remains is the change in the cap across elections, from 400 to 500 to 350, which shifted the predicted size of every station at once. With fixed effects for the cap, the effective *F* statistic falls to `r round(f_cap$F_stat[["F.effective"]], 1)`. In the fuzzy RD, only the drops at the cutoffs identify the effect, and the effective *F* statistic is `r round(f_rd$F_stat[["F.effective"]], 2)`. Below the tenth cutoff, where the drops are largest, it is `r round(f_rd10$F_stat[["F.effective"]], 2)`.
+
+The drops are weak in the data because few municipalities have the number of stations the rule requires.
+```{r rueda_comply}
+stations <- round(voters / exp(rueda$lm_pob_mesa))  # stations in each municipality-election
+required <- ceiling(rueda$ratio)                     # stations the rule requires
+round(c(exact = mean(stations == required), more = mean(stations > required)), 2)
+round(tapply(stations == required, cut(rueda$ratio, c(0, 5.5, 20.5, Inf)), mean), 2)
+```
+
+Only `r round(100 * mean(stations == required))`% of municipality-elections have exactly the required number, and `r round(100 * mean(stations > required))`% have more. The share falls as municipalities grow, and half of them have more than 20 times the cap, where crossing a cutoff lowers the predicted size by less than 5%. With a first stage this weak, rely on the AR set rather than the *t*-test [@feir2016weak].
