@@ -1,5 +1,18 @@
 # Changelog {#sec-changelog .unnumbered}
 
+## v1.0.8
+
+[On the `dev` branch; not yet on CRAN.]{.text-muted}
+
+**Changes that affect results**
+
+* **`eff_F()` with several instruments.** The effective *F* of @olea2013robust is now computed from the instruments with the intercept, the controls and the fixed effects partialled out, and weighted by `weights`. Earlier versions used the raw instruments: not centered when there were no fixed effects, only demeaned within fixed effects otherwise, never partialled on the controls, and never weighted. With two or more instruments, the value was wrong whenever there were controls, no fixed effects, or weights. For example, with two instruments with nonzero means and no controls, it was 24.5452 instead of 85.7537. The effective *F* in `ivDiag()` changes in the same way. Results with one instrument, including every example in this manual, are unchanged.
+
+**Bug fixes**
+
+* `eff_F()` and `ivDiag()` now stop with a clear error message when the instruments are collinear with each other or with the controls or fixed effects. Collinear controls are still handled. Earlier versions of `eff_F()` returned `NaN`, `NA` or a wrong number. `ivDiag()` mostly failed with a matrix-inversion error ("system is exactly singular" or "inverse cannot be computed"), and returned a wrong effective *F* only for a constant instrument or one in the span of the controls. `ivDiag()` now runs this check first.
+* `eff_F()` and `ivDiag()` now center and scale the instruments before fitting, which leaves the effective *F* unchanged. Instruments on very different scales (for example 1e6 and 1e-6) or with a large mean (1e5 or more) used to make **lfe** treat them as collinear, which gave `NA`, an error or a wrong value, for example -9.7 instead of 74.35 for instruments with mean 10^6^.
+
 ## v1.0.7
 
 [On CRAN since 2026-10-30.]{.text-muted}
