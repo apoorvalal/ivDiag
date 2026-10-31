@@ -10,7 +10,7 @@ knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
 |-------------------|-------------------|----------------|-------------------------------------------|
 | CRAN | 1.0.7 | 2026-10-30 | Default release: exact AR confidence set, fuzzy RD designs, weighted LTZ fix and a reproducible bootstrap; see the [Changelog](aa-changelog.html) |
 | GitHub (`master`) | 1.0.7 | 2026-10-30 | Same as CRAN |
-| GitHub (`dev`) | 1.0.8 | 2026-10-30 | Effective *F* fixed for several instruments; see the [Changelog](aa-changelog.html) |
+| GitHub (`dev`) | 1.0.8 | 2026-10-30 | Effective *F* fixed for several instruments; factor instruments handled as dummies; see the [Changelog](aa-changelog.html) |
 
 New versions are tested and merged into the `dev` branch first. After CRAN accepts a release, `dev` is merged into `master`, so `master` matches CRAN.
 

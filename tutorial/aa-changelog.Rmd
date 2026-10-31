@@ -6,12 +6,13 @@
 
 **Changes that affect results**
 
-* **`eff_F()` with several instruments.** The effective *F* of @olea2013robust is now computed from the instruments with the intercept, the controls and the fixed effects partialled out, and weighted by `weights`. Earlier versions used the raw instruments: not centered when there were no fixed effects, only demeaned within fixed effects otherwise, never partialled on the controls, and never weighted. With two or more instruments, the value was wrong whenever there were controls, no fixed effects, or weights. For example, with two instruments with nonzero means and no controls, it was 24.5452 instead of 85.7537. The effective *F* in `ivDiag()` changes in the same way. Results with one instrument, including every example in this manual, are unchanged.
+* **Effective *F* with several instruments.** `eff_F()` now partials the intercept, controls and fixed effects out of the instruments, and applies `weights`, as @olea2013robust require. Earlier versions did not, so with two or more instruments the value could be wrong (e.g., 24.55 instead of 85.75). Results with one instrument, including every example in this manual, are unchanged.
+* **Factor instruments.** A factor or character instrument now enters every statistic as dummies for all levels but the first. Earlier versions used it as one numeric column for the standard, robust and cluster *F*, the AR test and `tF()`. In one 8-level example from @lal2023trust, the AR *p*-value changes from 0.967 to 0.175. No example in this manual has a factor instrument.
 
 **Bug fixes**
 
-* `eff_F()` and `ivDiag()` now stop with a clear error message when the instruments are collinear with each other or with the controls or fixed effects. Collinear controls are still handled. Earlier versions of `eff_F()` returned `NaN`, `NA` or a wrong number. `ivDiag()` mostly failed with a matrix-inversion error ("system is exactly singular" or "inverse cannot be computed"), and returned a wrong effective *F* only for a constant instrument or one in the span of the controls. `ivDiag()` now runs this check first.
-* `eff_F()` and `ivDiag()` now center and scale the instruments before fitting, which leaves the effective *F* unchanged. Instruments on very different scales (for example 1e6 and 1e-6) or with a large mean (1e5 or more) used to make **lfe** treat them as collinear, which gave `NA`, an error or a wrong value, for example -9.7 instead of 74.35 for instruments with mean 10^6^.
+* `eff_F()` and `ivDiag()` stop with a clear error when the instruments are collinear, instead of returning `NA` or a wrong number.
+* `eff_F()` standardizes the instruments internally, so instruments on very different scales or with large means no longer break it. With two or more clustering variables it skips this step, because **lfe**'s repair of the cluster variance depends on scale.
 
 ## v1.0.7
 
@@ -19,29 +20,28 @@
 
 **Changes that affect results**
 
-* **AR confidence set on the whole real line.** `AR_test()` and `ivDiag()` now find the Anderson-Rubin confidence set exactly. With one instrument, the set solves a quadratic inequality, so it is an interval, two rays, the whole line, or empty. With several instruments, the whole line is scanned and each boundary is refined by root finding. Earlier versions inverted the test only within 10 SEs of the 2SLS estimate and could miss part of the set, for example reporting `[0.0642, Inf)` instead of `(-Inf, -1.1605] Union [0.0640, Inf)`. The AR test of zero effect (`Fstat`) is unchanged.
-* **`ltz()` with `weights`.** The adjustment term now uses weighted cross-products, consistent with the weighted 2SLS fit. With one instrument, it equals one over the weighted first-stage coefficient. In the example in @sec-sensitivity, the LTZ estimate changes from 3.6088 (SE 0.8112) to 3.7441 (SE 0.7568). Results without weights are unchanged. (#18, thanks [\@Rok-Novak](https://github.com/Rok-Novak))
-* **`tF()` with a very weak first stage.** Below an *F* of 4, where the table of @lee2022valid starts, `tF()` now returns an infinite critical value and an interval that covers the whole real line. Earlier versions used 18.66, the value at *F* = 4, for any smaller *F*, so the interval was too narrow. `plot_coef()` labels such an interval "Unbounded CI".
-* **Reproducible bootstrap.** Each bootstrap draw gets its own random-number stream derived from `seed` (through **doRNG**), so results are the same with or without parallel computing and for any number of cores. Up to v1.0.6, `seed` did not reach the parallel workers, so the default parallel bootstrap changed from run to run. For a given `seed`, bootstrap results differ from those of v1.0.6.
+* **AR confidence set on the whole real line.** `AR_test()` now finds the Anderson-Rubin set exactly. Earlier versions searched only within 10 SEs of the 2SLS estimate and could miss part of it, e.g., `[0.0642, Inf)` instead of `(-Inf, -1.1605] Union [0.0640, Inf)`. The AR test of zero effect is unchanged.
+* **`ltz()` with `weights`.** The adjustment now uses weighted cross-products. In @sec-sensitivity, the LTZ estimate changes from 3.6088 (SE 0.8112) to 3.7441 (SE 0.7568). (#18, thanks [\@Rok-Novak](https://github.com/Rok-Novak))
+* **`tF()` with a very weak first stage.** Below *F* = 4, `tF()` returns an interval covering the whole real line, as @lee2022valid require. Earlier versions used the critical value at *F* = 4, so the interval was too narrow.
+* **Reproducible bootstrap.** `seed` now reaches the parallel workers (through **doRNG**), so results no longer depend on the number of cores or change from run to run. For a given `seed`, results differ from v1.0.6.
 
 **New features**
 
-* **Fuzzy RD designs.** `ivDiag()` gains `running`, `cutoff`, `rd.poly`, `bandwidth` and `kernel`. The instrument is the indicator for crossing the cutoff, and a polynomial in the running variable, separate on each side, is partialled out, so only the jump at the cutoff identifies the effect. With several cutoffs, each unit is compared with its nearest cutoff. See @sec-rd.
-* **New dataset `mcclendon`** [@mcclendon2014], a randomized encouragement design, now the main example in this manual and in the help pages.
-* **This manual is now a Quarto book** in `tutorial/`, with raw-data figures, a weak-instrument AR example, and a chapter on fuzzy RD designs. `rueda` is still shipped.
+* **Fuzzy RD designs.** `ivDiag()` gains `running`, `cutoff`, `rd.poly`, `bandwidth` and `kernel`, so that only the jump at the cutoff identifies the effect. See @sec-rd.
+* **New dataset `mcclendon`** [@mcclendon2014], now the main example in this manual and the help pages.
+* **This manual is now a Quarto book** in `tutorial/`.
 
 **Bug fixes**
 
-* The parallel bootstrap in `ivDiag()` works again. After a GitHub change in July 2024, the worker cluster was stopped twice and the call failed with "invalid connection". The cluster is now stopped once on exit, also after an error, and the sequential backend is restored. CRAN v1.0.6 was not affected. (#12, thanks [\@kjohnsen](https://github.com/kjohnsen))
-* Harmless "NaNs produced" warnings from `felm()` in bootstrap resamples are silenced.
+* The parallel bootstrap works again; a July 2024 change on GitHub made it fail with "invalid connection". CRAN v1.0.6 was not affected. (#12, thanks [\@kjohnsen](https://github.com/kjohnsen))
+* Harmless "NaNs produced" warnings in bootstrap resamples are silenced.
 
 **Other changes**
 
-* The bootstrap workers start with `parallelly::makeClusterPSOCK()`. **future** is no longer imported. (#15, thanks [\@HenrikBengtsson](https://github.com/HenrikBengtsson))
-* `ivDiag()` no longer calls `set.seed()`, so the caller's random-number state is left as it was.
-* DESCRIPTION gives the GitHub address for bug reports (#8, thanks [\@olivroy](https://github.com/olivroy); #16, thanks [\@HenrikBengtsson](https://github.com/HenrikBengtsson)) and cites @lal2023trust by DOI.
-* The help pages of the datasets give their Dataverse sources and licenses.
-* Unit tests added (`tests/testthat`). Unused imports (**fixest**, **glue**) removed.
+* Bootstrap workers start with `parallelly::makeClusterPSOCK()`; **future** is no longer imported. (#15, thanks [\@HenrikBengtsson](https://github.com/HenrikBengtsson))
+* `ivDiag()` no longer calls `set.seed()`.
+* DESCRIPTION gives the address for bug reports (#8, thanks [\@olivroy](https://github.com/olivroy); #16, thanks [\@HenrikBengtsson](https://github.com/HenrikBengtsson)) and cites @lal2023trust by DOI.
+* Dataset help pages give their sources and licenses. Unit tests added; unused imports removed.
 
 ## v1.0.6
 
