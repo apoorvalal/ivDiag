@@ -1,7 +1,7 @@
 Package: ivDiag
 Title: Estimation and Diagnostic Tools for Instrumental Variables Designs
-Version: 1.0.7
-Date: 2026-10-18
+Version: 1.0.8
+Date: 2026-10-30
 Authors@R: c(
   person("Apoorva", "Lal", , "lal.apoorva@gmail.com", c("aut"), comment = c(ORCID = "0000-0002-3697-614X")),
   person("Yiqing", "Xu", , "yiqingxu@stanford.edu", c("aut", "cre"), comment = c(ORCID = "0000-0003-2041-6671"))  

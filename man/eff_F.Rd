@@ -17,6 +17,13 @@ eff_F(data, Y, D, Z, controls = NULL, FE = NULL, cl = NULL,
 \item{weights}{a string indicating the variable that stores weights.}
 \item{prec}{precision of results (4 by default).}
 }
+\details{
+  The instruments must be identified: after the intercept, controls and fixed
+  effects are partialled out, they must be linearly independent of each other
+  and not (numerically) zero. Otherwise \code{eff_F()} stops with an error.
+  Collinear controls are harmless and are ignored. The instruments are centred
+  and scaled internally; the effective F does not depend on their scale or mean.
+}
 \value{
   the effective F statistic. 
 }

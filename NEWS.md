@@ -1,3 +1,19 @@
+# ivDiag 1.0.8
+* `eff_F()` (and so the effective F in `ivDiag()`) now builds the instrument cross-product
+  matrix from the instruments with the intercept, controls and fixed effects partialled
+  out, weighted by `weights`. Earlier versions used the raw instruments (demeaned only
+  within fixed effects), so with two or more instruments, controls, no fixed effects or
+  weights gave a wrong value, e.g. 24.5452 instead of 85.7537 for two instruments with
+  nonzero means and no controls. Results with one instrument are unchanged.
+* `eff_F()` (and so `ivDiag()`) now stops with a clear error when the instruments are
+  collinear with each other or with the controls or fixed effects, instead of returning
+  `NaN`, `NA` or a wrong number. Collinear controls are still handled. `ivDiag()` checks
+  this first, so it no longer fails with a matrix-inversion error.
+* `eff_F()` (and so `ivDiag()`) no longer fails or returns a wrong value when instruments
+  are on very different scales (e.g. 1e6 and 1e-6) or have a very large mean (1e5 or
+  more). The effective F does not depend on the scale or mean of the instruments, and
+  they are now standardized internally.
+
 # ivDiag 1.0.7
 * `AR_test()` (and `ivDiag()`) now find the Anderson-Rubin confidence set on the
   whole real line. The reduced-form coefficients are linear and their robust or
