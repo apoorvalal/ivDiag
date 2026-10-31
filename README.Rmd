@@ -30,7 +30,7 @@ stable](https://img.shields.io/badge/lifecycle-stable-green.svg)](https://www.ti
 
 **Examples:** `R` code used in the [tutorial](https://yiqingxu.org/packages/ivDiag/articles/iv_tutorial.html) can be downloaded from [here](https://raw.githubusercontent.com/apoorvalal/ivDiag/master/pkgdown/ivDiag_examples.R).
 
-**Reference:** : Lal, Apoorva, Mackenzie William Lockhart, Yiqing Xu, and Ziwen Zu (2023). [How Much Should We Trust Instrumental Variable Estimates in Political Science? Practical Advice Based on 67 Replicated Studies](https://yiqingxu.org/papers/english/2021_iv/LLXZ.pdf), Mimeo, Stanford University.
+**Reference:** : Lal, Apoorva, Mackenzie William Lockhart, Yiqing Xu, and Ziwen Zu (2023). [How Much Should We Trust Instrumental Variable Estimates in Political Science? Practical Advice Based on 67 Replicated Studies](https://yiqingxu.org/papers/2024_iv/LLXZ.pdf), Mimeo, Stanford University.
 
 ***
 
