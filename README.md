@@ -30,7 +30,7 @@ can be downloaded from
 **Reference:** : Lal, Apoorva, Mackenzie William Lockhart, Yiqing Xu,
 and Ziwen Zu (2023). [How Much Should We Trust Instrumental Variable
 Estimates in Political Science? Practical Advice Based on 67 Replicated
-Studies](https://yiqingxu.org/papers/english/2021_iv/LLXZ.pdf), Mimeo,
+Studies](https://yiqingxu.org/papers/2024_iv/LLXZ.pdf), Mimeo,
 Stanford University.
 
 ------------------------------------------------------------------------
