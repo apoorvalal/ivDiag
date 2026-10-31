@@ -23,6 +23,10 @@ eff_F(data, Y, D, Z, controls = NULL, FE = NULL, cl = NULL,
   and not (numerically) zero. Otherwise \code{eff_F()} stops with an error.
   Collinear controls are harmless and are ignored. The instruments are centred
   and scaled internally; the effective F does not depend on their scale or mean.
+  This is not done with two or more clustering variables: lfe then repairs the
+  multiway cluster variance in a way that depends on the scale of the
+  regressors, and the instruments are used as they are, so that with one
+  instrument the effective F equals the cluster-robust F of \code{ivDiag()}.
 }
 \value{
   the effective F statistic. 
