@@ -15,7 +15,7 @@ ivDiag(data, Y, D, Z = NULL, controls = NULL, FE = NULL, cl = NULL, weights = NU
   \item{data}{name of a dataframe.}
   \item{Y}{a string indicating the outcome variable.}
   \item{D}{a string indicating the treatment variable.}
-  \item{Z}{a vector of strings indicating the instrumental variables. May be \code{NULL} when \code{running} is given; the instrument is then the indicator for crossing the cutoff.}
+  \item{Z}{a vector of strings indicating the instrumental variables. May be \code{NULL} when \code{running} is given; the instrument is then the indicator for crossing the cutoff. A factor or character instrument enters as dummy variables for all its levels but the first (base) level, named \code{<instrument>_<level>}, so a factor with K levels counts as K - 1 instruments. The tF procedure is then reported only for a factor with two levels.}
   \item{controls}{a vector of strings indicating the control variables.}
   \item{FE}{a vector of strings indicating the fixed effects variables.}
   \item{cl}{a string indicating the clustering variable.}

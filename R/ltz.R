@@ -4,6 +4,8 @@
 #' @param Y outcome (string)
 #' @param D treatment (string)
 #' @param Z instrument (string)
+#'   A factor or character instrument enters as dummies for all levels but the
+#'   first (base) level, so a factor with K levels counts as K - 1 instruments.
 #' @param controls control variables (character vector)
 #' @param FE fixed effects (character vector)
 #' @param cl clustering column for SE (character vector)
@@ -13,6 +15,9 @@
 ltz = function(data, Y, D, Z, controls, FE = NULL, cl = NULL, weights = NULL, prior, prec = 4) {
   # requirements: iv coef and se, residualized Z and D, and prior on μ, Sigma
   
+  # factor or character instruments enter as dummies
+  iv.exp <- expand_factor_iv(data, Z, used = c(Y, D, Z, controls, FE, cl, weights))
+  data <- iv.exp$data; Z <- iv.exp$Z
   # drop missingness
   data <- data[, unique(c(Y, D, Z, controls, FE, cl, weights))]
   data <- haven::zap_labels(data)

@@ -1,4 +1,27 @@
 # ivDiag 1.0.8
+* Factor and character instruments: `ivDiag()`, `AR_test()`, `eff_F()` and `ltz()` now
+  expand each one into dummy variables for all its levels but the first (base) level,
+  named `<instrument>_<level>`, and a message lists them. Every statistic then uses the
+  same instruments. Earlier versions were inconsistent: the 2SLS fit and the effective F
+  used the dummies (lfe expands a factor itself), but the standard, robust and cluster F,
+  the first stage, the AR test and tF used the factor as one numeric column (or failed
+  when its labels were not numbers). Example: design Alt2015 of the Lal et al. (2024)
+  replication data, an instrument with 8 levels (N = 5,705): F.standard 60.19 and
+  F.robust 68.91 before, 32.09 and 27.98 now, with F.effective 32.22 as before; the AR
+  test p-value 0.967 before, 0.1746 now, with the AR set [-0.0817, 0.0095] instead of
+  [-0.0665, 0.0726]. `p_iv` is now 7, so tF, which needs one
+  instrument, is no longer reported. The 2SLS estimate is unchanged. Numeric and logical
+  instruments are not affected.
+* `eff_F()` with two or more clustering variables: the instruments are not centred and
+  scaled before the fit (the step described below). With multiway clusters, lfe repairs a
+  cluster variance that is not positive definite by setting its negative eigenvalues to
+  zero, and the result depends on the scale of the regressors. With the scaling, the
+  effective F with one instrument would differ from the cluster-robust F, which it must equal. Examples
+  from the Lal et al. (2024) replication data, each with two clustering variables:
+  Arias2019 14.4763 (13.4685 with the scaling); Carnegie2017 7.5007 (7.3359); Cirone2018
+  168.0023 (169.5054). These are the values of 1.0.7 and equal F.cluster. The tF
+  interval moves with the effective F. Designs with no or one clustering variable keep
+  the scaling and are unchanged.
 * `eff_F()` (and so the effective F in `ivDiag()`) now builds the instrument cross-product
   matrix from the instruments with the intercept, controls and fixed effects partialled
   out, weighted by `weights`. Earlier versions used the raw instruments (demeaned only

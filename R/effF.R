@@ -50,6 +50,8 @@ instruments_identified = function(fsmod, p_iv, tol = EFF_F_COLLINEAR_TOL) {
 #' @param Y outcome (string)
 #' @param D treatment (string)
 #' @param Z instrument (string)
+#'   A factor or character instrument enters as dummies for all levels but the
+#'   first (base) level, so a factor with K levels counts as K - 1 instruments.
 #' @param controls control variables (character vector)
 #' @param FE fixed effects (character vector)
 #' @param cl clustering column for SE (character vector)
@@ -60,10 +62,16 @@ instruments_identified = function(fsmod, p_iv, tol = EFF_F_COLLINEAR_TOL) {
 #'   not (numerically) zero. Otherwise \code{eff_F()} stops with an error.
 #'   Collinear controls are harmless and are ignored. The instruments are centred
 #'   and scaled internally; the effective F does not depend on their scale or mean.
+#'   Not with two or more clustering variables, where lfe's repair of the
+#'   multiway cluster variance depends on scale: the instruments are then used
+#'   as they are, so that with one instrument eff_F equals the cluster-robust F.
 #' @export
 eff_F = function(data, Y, D, Z, controls = NULL, FE = NULL, 
   cl = NULL, weights = NULL, prec = 4
   ) {
+  # factor or character instruments enter as dummies (all but the base level)
+  iv.exp = expand_factor_iv(data, Z, used = c(Y, D, Z, controls, FE, cl, weights))
+  data = iv.exp$data; Z = iv.exp$Z
   fmla = formula_lfe(Y = Y, D = D, Z = Z, X = controls, FE = FE, cl = cl)
   # The effective F is invariant to any nonsingular linear transformation of
   # the instruments (pi and Q change together), and a shift is absorbed by the
@@ -71,8 +79,14 @@ eff_F = function(data, Y, D, Z, controls = NULL, FE = NULL,
   # non-missing rows) in a local copy of the data: instruments on very
   # different scales or with a huge mean otherwise make lfe's Cholesky step
   # alias them or lose precision. A constant instrument cannot be scaled.
-  # Only numeric and logical instruments: a factor or character instrument is
-  # left as it is, so that felm expands it into dummies.
+  # Not with two or more clustering variables: felm then makes the multiway
+  # cluster variance positive semi-definite by zeroing the negative eigenvalues
+  # of the whole matrix (instruments and controls), and that repair depends on
+  # the scale of the regressors. Rescaling would change the variance, and with
+  # one instrument eff_F would no longer equal the cluster-robust F of
+  # ivDiag(), which uses the instruments as they are. The constant-instrument
+  # check still applies.
+  rescale = length(cl) < 2
   for (z in Z) {
     if (!(is.numeric(data[[z]]) || is.logical(data[[z]]))) next
     v = as.numeric(data[[z]])
@@ -80,7 +94,7 @@ eff_F = function(data, Y, D, Z, controls = NULL, FE = NULL,
     if (!is.finite(s) || s <= EFF_F_CONSTANT_TOL * max(abs(v), na.rm = TRUE)) {
       stop(EFF_F_COLLINEAR_MSG, call. = FALSE)
     }
-    data[[z]] = (v - mean(v, na.rm = TRUE)) / s
+    if (rescale) data[[z]] = (v - mean(v, na.rm = TRUE)) / s
   }
   # with a single instrument that is a linear combination of the controls,
   # felm itself fails inside chol2inv() ("... the inverse cannot be computed")

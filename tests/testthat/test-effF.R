@@ -372,3 +372,44 @@ test_that("factor and character instruments give the values of ea04722", {
                47.5693144438, tolerance = 1e-8)
   expect_equal(e(c("zl", "z2"), controls = "x1"), 317.270741014, tolerance = 1e-8)
 })
+
+# ---- one instrument and two or more clustering variables: eff_F = F.cluster
+# With multiway clusters felm repairs a non-positive-definite variance by
+# zeroing its negative eigenvalues, which depends on the scale of the
+# regressors, so eff_F() must not rescale the instrument there (1.0.8 did, and
+# gave 55.1894 instead of 50.8149 for seed 29 below).
+
+sim_2way <- function(seed, n = 300, G = 12, H = 8) {
+  set.seed(seed)
+  g <- sample(1:G, n, TRUE); h <- sample(1:H, n, TRUE)
+  x1 <- rnorm(n) + rnorm(G)[g]; x2 <- rnorm(n) + rnorm(H)[h]
+  z <- 3 + 0.5 * x1 + rnorm(G)[g] + rnorm(H)[h] + rnorm(n)
+  u <- rnorm(n) + rnorm(G)[g] + rnorm(H)[h]
+  d <- 0.4 * z + 0.5 * x1 + 0.3 * x2 + u + rnorm(n)
+  y <- d + x1 + u + rnorm(n)
+  data.frame(y, d, z, x1, x2, g, h)
+}
+
+test_that("one instrument, two-way clusters: eff_F equals the cluster-robust F", {
+  for (s in c(13, 29, 35, 37)) {
+    df <- sim_2way(s)
+    out <- suppressWarnings(suppressMessages(ivDiag(df, "y", "d", "z", controls = c("x1", "x2"),
+      cl = c("g", "h"), bootstrap = FALSE, run.AR = FALSE)))
+    expect_equal(unname(out$F_stat["F.effective"]), unname(out$F_stat["F.cluster"]),
+                 info = paste("seed", s))
+    # and felm's own pi^2 / V on the raw instrument
+    fs <- suppressWarnings(lfe::felm(y ~ x1 + x2 | 0 | (d ~ z) | g + h, data = df))$stage1
+    ref <- unname(fs$coefficients["z", ]^2 / fs$clustervcv["z", "z"])
+    expect_equal(suppressWarnings(eff_F(df, "y", "d", "z", controls = c("x1", "x2"),
+                                        cl = c("g", "h"), prec = 12)),
+                 ref, tolerance = 1e-8, info = paste("seed", s))
+  }
+  expect_equal(suppressWarnings(eff_F(sim_2way(29), "y", "d", "z", controls = c("x1", "x2"),
+                                      cl = c("g", "h"))), 50.8149)
+  # with fixed effects and weights
+  df <- sim_2way(29)
+  df$w <- exp(0.5 * rnorm(nrow(df)))
+  out <- suppressWarnings(suppressMessages(ivDiag(df, "y", "d", "z", controls = "x2", FE = "g",
+    cl = c("g", "h"), weights = "w", bootstrap = FALSE, run.AR = FALSE)))
+  expect_equal(unname(out$F_stat["F.effective"]), unname(out$F_stat["F.cluster"]))
+})
