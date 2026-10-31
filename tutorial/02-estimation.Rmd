@@ -110,7 +110,13 @@ The `plot_coef()` function plots OLS and 2SLS estimates using different inferent
 
 In this example, the 2SLS estimate is slightly larger than the OLS estimate. For each estimator, the CIs from the different inferential methods nearly coincide, as one would expect with a randomized, strong instrument and a large sample.
 ```{r}
-plot_coef(g)
+#| label: fig-mcclendon-coef
+#| fig-cap: "OLS and 2SLS estimates with 95% CIs from each inferential method, McClendon (2014)"
+#| fig-width: 8
+#| fig-height: 4.5
+#| out-width: "95%"
+par(mar = c(4, 4, 1, 2))
+plot_coef(g, ylim = c(-0.1, 0.6), main = "", ylab = "Treatment Effect Estimate")
 ```
 
 Use the plot options to adjust its appearance and select which estimates to show. For example:
