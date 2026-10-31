@@ -9,7 +9,7 @@ ltz(data, Y, D, Z, controls, FE = NULL, cl = NULL, weights = NULL, prior, prec =
   \item{data}{name of a dataframe.}
   \item{Y}{a string indicating the outcome variable.}
   \item{D}{a string indicating the treatment variable.}
-  \item{Z}{a vector of strings indicating the instrumental variables.}
+  \item{Z}{a vector of strings indicating the instrumental variables. A factor or character instrument enters as dummy variables for all its levels but the first (base) level, named \code{<instrument>_<level>}, so a factor with K levels counts as K - 1 instruments.}
   \item{controls}{a vector of strings indicating the control variables.}
   \item{FE}{a vector of strings indicating the fixed effects variables.}
   \item{cl}{a string indicating the clustering variable.}

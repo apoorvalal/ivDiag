@@ -50,6 +50,8 @@ instruments_identified = function(fsmod, p_iv, tol = EFF_F_COLLINEAR_TOL) {
 #' @param Y outcome (string)
 #' @param D treatment (string)
 #' @param Z instrument (string)
+#'   A factor or character instrument enters as dummies for all levels but the
+#'   first (base) level, so a factor with K levels counts as K - 1 instruments.
 #' @param controls control variables (character vector)
 #' @param FE fixed effects (character vector)
 #' @param cl clustering column for SE (character vector)
@@ -64,6 +66,9 @@ instruments_identified = function(fsmod, p_iv, tol = EFF_F_COLLINEAR_TOL) {
 eff_F = function(data, Y, D, Z, controls = NULL, FE = NULL, 
   cl = NULL, weights = NULL, prec = 4
   ) {
+  # factor or character instruments enter as dummies (all but the base level)
+  iv.exp = expand_factor_iv(data, Z, used = c(Y, D, Z, controls, FE, cl, weights))
+  data = iv.exp$data; Z = iv.exp$Z
   fmla = formula_lfe(Y = Y, D = D, Z = Z, X = controls, FE = FE, cl = cl)
   # The effective F is invariant to any nonsingular linear transformation of
   # the instruments (pi and Q change together), and a shift is absorbed by the
@@ -71,8 +76,6 @@ eff_F = function(data, Y, D, Z, controls = NULL, FE = NULL,
   # non-missing rows) in a local copy of the data: instruments on very
   # different scales or with a huge mean otherwise make lfe's Cholesky step
   # alias them or lose precision. A constant instrument cannot be scaled.
-  # Only numeric and logical instruments: a factor or character instrument is
-  # left as it is, so that felm expands it into dummies.
   for (z in Z) {
     if (!(is.numeric(data[[z]]) || is.logical(data[[z]]))) next
     v = as.numeric(data[[z]])

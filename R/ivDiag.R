@@ -3,6 +3,8 @@
 #' @param Y outcome (string)
 #' @param D treatment (string)
 #' @param Z instrument (string)
+#'   A factor or character instrument enters as dummies for all levels but the
+#'   first (base) level, so a factor with K levels counts as K - 1 instruments.
 #' @param controls control variables (character vector)
 #' @param FE fixed effects (character vector)
 #' @param cl clustering column for SE (character vector)
@@ -66,6 +68,12 @@ ivDiag <- function(
     FE <- rd$FE; weights <- rd$weights; rd.info <- rd$info
   }
   if (is.null(Z)) stop("Please provide the instrument(s) Z, or a running variable.")
+
+  # factor or character instruments enter as dummies (all but the base level),
+  # so the F statistics, the AR test, tF and p_iv all see the same instruments
+  # as felm's 2SLS fit
+  iv.exp <- expand_factor_iv(data, Z, used = c(Y, D, Z, controls, FE, cl, weights))
+  data <- iv.exp$data; Z <- iv.exp$Z
 
   # drop missingness
   data <- data[, unique(c(Y, D, Z, controls, FE, cl, weights))]

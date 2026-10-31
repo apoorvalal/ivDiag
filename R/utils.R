@@ -41,6 +41,50 @@ formula_lfe <- function(Y, X, D = NULL, FE = NULL, Z = NULL, cl = NULL) {
   as.formula(paste(c(felm_ss, facs, felm_fs, clusts), collapse = "|"))
 }
 
+# %% factor and character instruments
+# Expand each factor or character instrument into dummy columns, one per level
+# except the base (first) level, with model.matrix() on the instrument alone.
+# Every function downstream then sees several numeric instruments, as felm does
+# when it expands a factor itself. Levels are those present in the complete
+# rows of `used` (the variables the caller uses), so a level that occurs only
+# in rows dropped for missing values does not become an all-zero column.
+# The new columns are named <instrument>_<level> (made syntactic and unique).
+# Numeric and logical instruments are left as they are; with none to expand,
+# the data come back unchanged.
+expand_factor_iv <- function(data, Z, used = Z) {
+  is_cat <- vapply(Z, function(z) is.factor(data[[z]]) || is.character(data[[z]]),
+                   logical(1))
+  if (!any(is_cat)) return(list(data = data, Z = Z))
+  used <- intersect(unique(c(used, Z)), names(data))
+  cc <- stats::complete.cases(as.data.frame(data)[, used, drop = FALSE])
+  taken <- names(data)
+  newZ <- character(0)
+  for (z in Z) {
+    v <- data[[z]]
+    if (!(is.factor(v) || is.character(v))) {
+      newZ <- c(newZ, z)
+      next
+    }
+    lev <- levels(droplevels(factor(v)[cc]))
+    if (length(lev) < 2) {
+      stop("The instrument \"", z, "\" is a factor (or character) with fewer than two ",
+           "levels in the estimation sample, so it does not vary.", call. = FALSE)
+    }
+    f <- factor(v, levels = lev)
+    mf <- stats::model.frame(~ f, data.frame(f = f), na.action = stats::na.pass)
+    mm <- stats::model.matrix(~ f, mf)[, -1, drop = FALSE]
+    nms <- make.names(paste0(z, "_", lev[-1]))
+    nms <- make.unique(c(taken, nms))[length(taken) + seq_along(nms)]
+    taken <- c(taken, nms)
+    for (k in seq_along(nms)) data[[nms[k]]] <- unname(mm[, k])
+    newZ <- c(newZ, nms)
+    message("Instrument \"", z, "\" is a factor with ", length(lev), " levels: it enters as ",
+            length(nms), " dummy instrument", if (length(nms) > 1) "s", " (base level \"",
+            lev[1], "\"): ", paste(nms, collapse = ", "), ".")
+  }
+  list(data = data, Z = newZ)
+}
+
 # %% partialer
 #' partial out controls and covariates from y
 #' @param y The dependent variable
