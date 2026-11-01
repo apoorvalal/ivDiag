@@ -17,11 +17,13 @@ ivDiag 1.0.8 (update of 1.0.7).
 
 ## Test environments
 
-* local: macOS (aarch64), R 4.5.3
+* local: macOS (aarch64), R 4.5.3; tests also run with Apple Accelerate and OpenBLAS
+  0.3.31 in place of the reference BLAS (all pass, no warnings)
+* win-builder: Windows Server 2022 (x86_64), R-devel (2026-10-31 r90820 ucrt)
 
 ## R CMD check results
 
-0 errors | 0 warnings | 1 note
+0 errors | 0 warnings | 1 note (on both)
 
 * Days since last update: 1.0.7 was published on 2026-10-30. This release fixes the
   BLIS issue CRAN asked us to correct.
