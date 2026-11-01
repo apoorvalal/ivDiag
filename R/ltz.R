@@ -30,9 +30,9 @@ ltz = function(data, Y, D, Z, controls, FE = NULL, cl = NULL, weights = NULL, pr
   # IV fit
   fmla = formula_lfe(Y = Y, D = D, Z = Z, X = controls, FE = FE, cl = cl)
   if (is.null(weights)) {
-    m2 = lfe::felm(fmla, data = data)
+    m2 = quiet_nan(lfe::felm(fmla, data = data))
   } else {
-    m2 = lfe::felm(fmla, data = data, weights = data[, weights])
+    m2 = quiet_nan(lfe::felm(fmla, data = data, weights = data[, weights]))
   }
   iv_beta <- c(tail(m2$coefficients, n = 1)) # felm IV fits have endog coef at the tail
   if (is.null(cl) == TRUE) {

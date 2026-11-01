@@ -1,4 +1,10 @@
 # ivDiag 1.0.8
+* No more "NaNs produced" warning from designs with one-sided noncompliance (CRAN's
+  BLIS check of 1.0.7). There the first-stage intercept fits one group exactly, so its
+  variance is zero in theory; with some BLAS/LAPACK libraries it rounds to slightly below
+  zero, and `felm()` warned when it took the square root to get an SE that ivDiag never
+  uses. Every `felm()` fit now muffles that one warning and passes all others on.
+  Reported estimates and standard errors are unchanged.
 * Factor and character instruments: `ivDiag()`, `AR_test()`, `eff_F()` and `ltz()` now
   expand each one into dummy variables for all its levels but the first (base) level,
   named `<instrument>_<level>`, and a message lists them. Every statistic then uses the
