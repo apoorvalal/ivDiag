@@ -85,6 +85,19 @@ expand_factor_iv <- function(data, Z, used = Z) {
   list(data = data, Z = newZ)
 }
 
+# %% quiet_nan
+# felm() takes the square root of each coefficient's variance. When a variance
+# is zero in theory (the intercept under one-sided noncompliance), rounding can
+# make it slightly negative, and some BLAS/LAPACK libraries do. sqrt() then
+# warns "NaNs produced" for a coefficient we never use. Muffle that warning
+# only; every other warning passes through.
+quiet_nan <- function(expr) {
+  nan_msg <- gettext("NaNs produced", domain = "R")
+  withCallingHandlers(expr, warning = function(w) {
+    if (identical(conditionMessage(w), nan_msg)) invokeRestart("muffleWarning")
+  })
+}
+
 # %% partialer
 #' partial out controls and covariates from y
 #' @param y The dependent variable
@@ -97,9 +110,9 @@ partialer <- function(Y, X, FE = NULL, data, weights = NULL) {
   # regress variable on controls and FEs and return residuals
   f = formula_lfe(Y = Y, X = X, FE = FE)
   if (is.null(weights) == TRUE) {
-    m <- lfe::felm(f, data)
+    m <- quiet_nan(lfe::felm(f, data))
   } else {
-    m <- lfe::felm(f, data, weights = data[, weights])
+    m <- quiet_nan(lfe::felm(f, data, weights = data[, weights]))
   }
   return(m$residuals[, 1])
 }
@@ -120,9 +133,9 @@ IV <- function(data, D, Y, Z, X = NULL, FE = NULL, cl = NULL, weights = NULL # w
 ) {
   fmla = formula_lfe(Y = Y, D = D, Z = Z, X = X, FE = FE, cl = cl)
   if (is.null(weights)) {
-    m2 = lfe::felm(fmla, data = data)
+    m2 = quiet_nan(lfe::felm(fmla, data = data))
   } else {
-    m2 = lfe::felm(fmla, data = data, weights = data[, weights])
+    m2 = quiet_nan(lfe::felm(fmla, data = data, weights = data[, weights]))
   }
   ## Output
   coef <- c(tail(m2$coefficients, n = 1)) # felm IV fits have endog coef at the tail
@@ -142,9 +155,9 @@ get.vcov <- function(data, D, Y, Z, X = NULL, FE = NULL, cl = NULL, weights = NU
   p_iv <- length(Z)
   fmla = formula_lfe(Y = Y, D = D, Z = Z, X = X, FE = FE, cl = cl)
   if (is.null(weights)) {
-    m2 = lfe::felm(fmla, data = data)
+    m2 = quiet_nan(lfe::felm(fmla, data = data))
   } else {
-    m2 = lfe::felm(fmla, data = data, weights = data[, weights])
+    m2 = quiet_nan(lfe::felm(fmla, data = data, weights = data[, weights]))
   }
   stage1 <- m2$stage1
   p <- nrow(stage1$vcv)
@@ -180,9 +193,9 @@ OLS <- function(data, Y, D, X = NULL, FE = NULL, cl = NULL, weights = NULL # wei
   p_D <- length(D)
   fmla = formula_lfe(Y = Y, D = D, X = X, FE = FE, cl = cl)
   if (is.null(weights) == TRUE) {
-    m1 = lfe::felm(fmla, data = data)
+    m1 = quiet_nan(lfe::felm(fmla, data = data))
   } else {
-    m1 = lfe::felm(fmla, data = data, weights = data[, weights])
+    m1 = quiet_nan(lfe::felm(fmla, data = data, weights = data[, weights]))
   }
   if (is.null(cl) == TRUE) {
     SE <- m1$rse # robust SE
@@ -211,9 +224,9 @@ first_stage_coefs <- function(data, D, Z, X, FE = NULL, weights = NULL # weights
   p_iv <- length(Z)
   formula <- formula_lfe(Y = D, D = Z, X = X, FE = FE)
   if (is.null(weights)) {
-    reg = lfe::felm(formula, data = data)
+    reg = quiet_nan(lfe::felm(formula, data = data))
   } else {
-    reg = lfe::felm(formula, data = data, weights = data[, weights])
+    reg = quiet_nan(lfe::felm(formula, data = data, weights = data[, weights]))
   }
   # slice model fit
   if (is.null(FE) == FALSE) {
@@ -240,9 +253,9 @@ first_stage_rho = function(data, D, Z, X, FE = NULL, weights = NULL # weights is
   # first stage
   fmla = formula_lfe(Y = D, D = Z, X = NULL, FE = NULL, cl = NULL)
   if (is.null(weights) == TRUE) {
-    m = lfe::felm(fmla, data = d0)
+    m = quiet_nan(lfe::felm(fmla, data = d0))
   } else {
-    m = lfe::felm(fmla, data = d0, weights = data[, weights])
+    m = quiet_nan(lfe::felm(fmla, data = d0, weights = data[, weights]))
   }
   # rho
   if (is.null(weights) == TRUE) {

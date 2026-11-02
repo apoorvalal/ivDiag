@@ -100,10 +100,10 @@ eff_F = function(data, Y, D, Z, controls = NULL, FE = NULL,
   # felm itself fails inside chol2inv() ("... the inverse cannot be computed")
   ivmod = tryCatch({
     if (is.null(weights)) {
-      lfe::felm(fmla, data = data, keepX = TRUE, keepCX = TRUE)
+      quiet_nan(lfe::felm(fmla, data = data, keepX = TRUE, keepCX = TRUE))
     } else {
-      lfe::felm(fmla, data = data, weights = data[, weights],
-                keepX = TRUE, keepCX = TRUE)
+      quiet_nan(lfe::felm(fmla, data = data, weights = data[, weights],
+                          keepX = TRUE, keepCX = TRUE))
     }
   }, error = function(e) {
     if (grepl("inverse cannot be computed", conditionMessage(e), fixed = TRUE)) {

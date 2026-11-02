@@ -19,7 +19,7 @@ CRAN](https://cranlogs.r-pkg.org/badges/grand-total/ivDiag)](https://www.datasci
 
 **`ivDiag`** is toolkit for estimation and diagnostics with instrumental
 variable (IV) designs. It provides `R` implementations of the guidelines
-proposed in Lal et al. (2023), enabling researchers to obtain reliable
+proposed in Lal et al. (2024), enabling researchers to obtain reliable
 and robust estimates of their IV models.
 
 **Examples:** `R` code used in the
@@ -27,11 +27,11 @@ and robust estimates of their IV models.
 can be downloaded from
 [here](https://raw.githubusercontent.com/apoorvalal/ivDiag/master/pkgdown/ivDiag_examples.R).
 
-**Reference:** : Lal, Apoorva, Mackenzie William Lockhart, Yiqing Xu,
-and Ziwen Zu (2023). [How Much Should We Trust Instrumental Variable
-Estimates in Political Science? Practical Advice Based on 67 Replicated
-Studies](https://yiqingxu.org/papers/2024_iv/LLXZ.pdf), Mimeo,
-Stanford University.
+**Reference:** Lal, Apoorva, Mackenzie Lockhart, Yiqing Xu, and Ziwen
+Zu (2024). [How Much Should We Trust Instrumental Variable Estimates in
+Political Science? Practical Advice Based on 67 Replicated
+Studies](https://doi.org/10.1017/pan.2024.2). *Political Analysis* 32
+(4): 521–540. [PDF](https://yiqingxu.org/papers/2024_iv/LLXZ.pdf).
 
 ------------------------------------------------------------------------
 

@@ -1,28 +1,32 @@
 ## Submission
 
-ivDiag 1.0.7 (update of 1.0.6).
+ivDiag 1.0.8 (update of 1.0.7).
 
-* The Anderson-Rubin confidence set is now computed on the whole real line (earlier
-  versions searched only near the 2SLS estimate and could miss unbounded pieces).
-* The bootstrap is reproducible: random-number streams per draw via 'doRNG' (new
-  import); the caller's random-number state is no longer changed (no `set.seed()`
-  inside functions).
-* Fixed the parallel bootstrap (cluster stopped twice), added a fuzzy regression
-  discontinuity option, a new example dataset (`mcclendon`), and unit tests.
-* `tF()` returns an unbounded interval below F = 4, where the Lee et al. (2022) table starts.
-* Fixed `ltz()` with weights: the adjustment now uses the weighted first stage.
-* The parallel bootstrap now uses 'parallelly' (replacing 'future', whose
-  makeClusterPSOCK() is a re-export).
-* Removed unused imports ('fixest', 'glue'); 'testthat' moved from Imports to Suggests.
+* Fixes the test failure in CRAN's BLIS check of 1.0.7 (deadline 2026-11-22). With
+  one-sided noncompliance, the first-stage intercept's variance is zero in theory and
+  can round to slightly below zero with some BLAS/LAPACK libraries; 'lfe' then warned
+  "NaNs produced" when taking its square root. That one warning is now muffled in every
+  `felm()` fit (it concerns a standard error the package never uses); other warnings
+  pass through. Reported results are unchanged.
+* The Description cites the published article, Lal, Lockhart, Xu and Zu (2024)
+  <doi:10.1017/pan.2024.2>.
+* The effective F statistic is corrected for two or more instruments with controls,
+  without fixed effects, or with weights; collinear instruments now give a clear error;
+  instruments are standardized internally (not with multiway clustering).
+* Factor and character instruments are expanded into dummy variables for every statistic.
 
 ## Test environments
 
-* local: macOS (aarch64), R 4.5.3
-* win-builder: Windows, R-devel
+* local: macOS (aarch64), R 4.5.3; tests also run with Apple Accelerate and OpenBLAS
+  0.3.31 in place of the reference BLAS (all pass, no warnings)
+* win-builder: Windows Server 2022 (x86_64), R-devel (2026-10-31 r90820 ucrt)
 
 ## R CMD check results
 
-0 errors | 0 warnings | 0 notes
+0 errors | 0 warnings | 1 note (on both)
+
+* Days since last update: 1.0.7 was published on 2026-10-30. This release fixes the
+  BLIS issue CRAN asked us to correct.
 
 ## Notes for the reviewer
 
