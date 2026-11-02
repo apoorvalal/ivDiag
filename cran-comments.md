@@ -8,8 +8,8 @@ ivDiag 1.0.8 (update of 1.0.7).
   "NaNs produced" when taking its square root. That one warning is now muffled in every
   `felm()` fit (it concerns a standard error the package never uses); other warnings
   pass through. Reported results are unchanged.
-* The arXiv NOTE on r-devel-linux-x86_64-debian-clang refers to 1.0.6; the Description
-  of 1.0.7 and 1.0.8 cites the published article by DOI.
+* The Description cites the published article, Lal, Lockhart, Xu and Zu (2024)
+  <doi:10.1017/pan.2024.2>.
 * The effective F statistic is corrected for two or more instruments with controls,
   without fixed effects, or with weights; collinear instruments now give a clear error;
   instruments are standardized internally (not with multiway clustering).
