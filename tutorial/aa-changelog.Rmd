@@ -2,7 +2,7 @@
 
 ## v1.0.8
 
-[On the `dev` branch; not yet on CRAN.]{.text-muted}
+[On CRAN since 2026-11-02.]{.text-muted}
 
 **Changes that affect results**
 
@@ -11,6 +11,7 @@
 
 **Bug fixes**
 
+* No more spurious "NaNs produced" warnings from some BLAS/LAPACK libraries; estimates and standard errors are unchanged. (#22)
 * `eff_F()` and `ivDiag()` stop with a clear error when the instruments are collinear, instead of returning `NA` or a wrong number.
 * `eff_F()` standardizes the instruments internally, so instruments on very different scales or with large means no longer break it. With two or more clustering variables it skips this step, because **lfe**'s repair of the cluster variance depends on scale.
 
