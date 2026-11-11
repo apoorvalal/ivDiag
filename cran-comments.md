@@ -1,32 +1,26 @@
 ## Submission
 
-ivDiag 1.0.8 (update of 1.0.7).
+ivDiag 1.0.9 (update of 1.0.8).
 
-* Fixes the test failure in CRAN's BLIS check of 1.0.7 (deadline 2026-11-22). With
-  one-sided noncompliance, the first-stage intercept's variance is zero in theory and
-  can round to slightly below zero with some BLAS/LAPACK libraries; 'lfe' then warned
-  "NaNs produced" when taking its square root. That one warning is now muffled in every
-  `felm()` fit (it concerns a standard error the package never uses); other warnings
-  pass through. Reported results are unchanged.
-* The Description cites the published article, Lal, Lockhart, Xu and Zu (2024)
-  <doi:10.1017/pan.2024.2>.
-* The effective F statistic is corrected for two or more instruments with controls,
-  without fixed effects, or with weights; collinear instruments now give a clear error;
-  instruments are standardized internally (not with multiway clustering).
-* Factor and character instruments are expanded into dummy variables for every statistic.
+* Fixes a bug that changes results: with a factor clustering variable that has unused
+  levels, the cluster bootstrap looked up the wrong rows for the clusters it drew, so
+  bootstrap standard errors, intervals, p-values and the bootstrapped F statistic were
+  wrong. Reported by a user (GitHub issue #24). Each drawn cluster now gets its own rows;
+  results without unused factor levels are unchanged. New tests cover the case.
 
 ## Test environments
 
-* local: macOS (aarch64), R 4.5.3; tests also run with Apple Accelerate and OpenBLAS
-  0.3.31 in place of the reference BLAS (all pass, no warnings)
-* win-builder: Windows Server 2022 (x86_64), R-devel (2026-10-31 r90820 ucrt)
+* local: macOS (aarch64), R 4.5.3
+* win-builder: Windows Server 2022 (x86_64), R-devel --- TODO before submitting
+* macbuilder: macOS, R-release --- TODO before submitting
 
 ## R CMD check results
 
-0 errors | 0 warnings | 1 note (on both)
+Local `R CMD check --as-cran`: 0 errors | 0 warnings | 0 notes.
+win-builder: TODO; expected 1 note:
 
-* Days since last update: 1.0.7 was published on 2026-10-30. This release fixes the
-  BLIS issue CRAN asked us to correct.
+* Days since last update: 1.0.8 was published on 2026-11-02. We are sorry for the quick
+  update: 1.0.9 fixes a bug that gives users wrong bootstrap results (see above).
 
 ## Notes for the reviewer
 

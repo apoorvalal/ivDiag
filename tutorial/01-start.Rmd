@@ -10,7 +10,7 @@ knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
 |-------------------|-------------------|----------------|-------------------------------------------|
 | CRAN | 1.0.8 | 2026-11-02 | Default release: effective *F* fixed for several instruments; factor instruments handled as dummies; see the [Changelog](aa-changelog.html) |
 | GitHub (`master`) | 1.0.8 | 2026-11-02 | Same as CRAN |
-| GitHub (`dev`) | 1.0.8 | 2026-11-02 | Same as CRAN |
+| GitHub (`dev`) | 1.0.9 | 2026-11-10 | Cluster bootstrap fixed for factor clustering variables with unused levels; see the [Changelog](aa-changelog.html) |
 
 New versions are tested and merged into the `dev` branch first. After CRAN accepts a release, `dev` is merged into `master`, so `master` matches CRAN.
 
