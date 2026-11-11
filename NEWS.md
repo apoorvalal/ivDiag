@@ -1,3 +1,18 @@
+# ivDiag 1.0.9
+* Cluster bootstrap with a factor clustering variable that has unused levels (#24,
+  reported by Leo Y. Yang). `ivDiag()` drew clusters from those present in the data but
+  looked up their rows by position in a list that kept an empty slot for every unused
+  level, so a draw could fetch no rows or another cluster's rows, and some clusters
+  could never be drawn. Unused levels arise after subsetting a data frame, or when the
+  complete-case filter removes every row of a cluster. Each sampled cluster now maps to
+  its own rows. Affected: the bootstrap SEs, intervals and p-values (bootstrap-c and
+  bootstrap-t) and `F.bootstrap`. Analytic results, the other F statistics, the AR test,
+  `eff_F()`, `tF()` and `ltz()` never used this lookup and are unchanged, as are results
+  with a numeric or character clustering variable or a factor without unused levels.
+  Example: design Henderson2016_a of the Lal et al. (2024) replication data, clustered on
+  a factor with 999 unused levels among 1,610 clusters: `F.bootstrap` 12.6 before, 23.2
+  now; 2SLS bootstrap-c SE 1.62 before, 0.46 now (1,000 draws, seed 94305).
+
 # ivDiag 1.0.8
 * No more "NaNs produced" warning from designs with one-sided noncompliance (CRAN's
   BLIS check of 1.0.7). There the first-stage intercept fits one group exactly, so its

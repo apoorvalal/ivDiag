@@ -89,8 +89,9 @@ ivDiag <- function(
   ### prep (using the first clustering variable in bootstrap)
   if (is.null(cl) == FALSE) { # find clusters
     d0 <- d0[order(d0[, cl[1]]), ]
-    clusters <- unique(d0[, cl[1]])
-    id.list <- split(1:n, d0[, cl[1]])
+    cg <- cluster_groups(d0[, cl[1]])
+    clusters <- cg$clusters
+    id.list <- cg$id.list
     ncl <- length(clusters)
   } else {
     ncl <- NULL

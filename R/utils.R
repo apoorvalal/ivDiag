@@ -85,6 +85,18 @@ expand_factor_iv <- function(data, Z, used = Z) {
   list(data = data, Z = newZ)
 }
 
+# %% cluster_groups
+# Rows of each cluster, for the cluster bootstrap. The groups are built from the
+# clusters that appear in the data, in the order unique() lists them, so the k-th
+# element of id.list holds the rows of clusters[k]. Splitting on a factor directly
+# would keep its unused levels as empty groups and shift every position after them
+# (issue #24): sampled clusters then fetched no rows or another cluster's rows.
+cluster_groups <- function(x) {
+  clusters <- unique(x)
+  id.list <- split(seq_along(x), factor(match(x, clusters), levels = seq_along(clusters)))
+  list(clusters = clusters, id.list = id.list)
+}
+
 # %% quiet_nan
 # felm() takes the square root of each coefficient's variance. When a variance
 # is zero in theory (the intercept under one-sided noncompliance), rounding can
