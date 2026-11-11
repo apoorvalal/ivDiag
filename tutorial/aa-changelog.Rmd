@@ -1,5 +1,13 @@
 # Changelog {#sec-changelog .unnumbered}
 
+## v1.0.9
+
+[In development (PR #25); not yet on CRAN.]{.text-muted}
+
+**Changes that affect results**
+
+* **Cluster bootstrap with unused factor levels.** When the first clustering variable is a factor with levels that do not appear in the data, `ivDiag()` drew the right clusters but fetched the wrong rows: some draws got no rows or another cluster's rows, and some clusters could never be drawn. Unused levels appear after subsetting a data frame, or when missing values remove every row of a cluster. Each drawn cluster now gets its own rows. This changes the bootstrap standard errors, intervals and *p*-values and `F.bootstrap`, and only in that case. In one design from @lal2023trust, clustered on a factor with 999 unused levels, the 2SLS bootstrap SE changes from 1.62 to 0.46. Numeric or character clustering variables, factors without unused levels, and every example in this manual are unchanged. (#24, thanks [\@leoyyang](https://github.com/leoyyang))
+
 ## v1.0.8
 
 [On CRAN since 2026-11-02.]{.text-muted}
