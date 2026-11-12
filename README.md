@@ -6,11 +6,11 @@
 <!-- badges: start -->
 <!--
 [![Lifecycle:
-experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://www.tidyverse.org/lifecycle/#experimental)
+experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 -->
 
 [![Lifecycle:
-stable](https://img.shields.io/badge/lifecycle-stable-green.svg)](https://www.tidyverse.org/lifecycle/#stablel)
+stable](https://img.shields.io/badge/lifecycle-stable-green.svg)](https://lifecycle.r-lib.org/articles/stages.html#stable)
 [![License:
 MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![downloads:
@@ -23,7 +23,7 @@ proposed in Lal et al. (2024), enabling researchers to obtain reliable
 and robust estimates of their IV models.
 
 **Examples:** `R` code used in the
-[tutorial](https://yiqingxu.org/packages/ivDiag/articles/iv_tutorial.html)
+[tutorial](https://yiqingxu.org/packages/ivDiag/)
 can be downloaded from
 [here](https://raw.githubusercontent.com/apoorvalal/ivDiag/master/pkgdown/ivDiag_examples.R).
 
